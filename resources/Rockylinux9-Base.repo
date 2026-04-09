@@ -1,0 +1,19 @@
+# Rocky Linux 9 镜像源 - 华为云
+
+[baseos]
+name=Rocky Linux $releasever - BaseOS
+baseurl=https://mirrors.huaweicloud.com/rockylinux/$releasever/BaseOS/$basearch/os/
+gpgcheck=0
+enabled=1
+
+[appstream]
+name=Rocky Linux $releasever - AppStream
+baseurl=https://mirrors.huaweicloud.com/rockylinux/$releasever/AppStream/$basearch/os/
+gpgcheck=0
+enabled=1
+
+[extras]
+name=Rocky Linux $releasever - Extras
+baseurl=https://mirrors.huaweicloud.com/rockylinux/$releasever/extras/$basearch/os/
+gpgcheck=0
+enabled=1

@@ -1,0 +1,50 @@
+""设置主题
+syntax on
+set t_Co=256
+set cursorline
+
+"""显示/不显示行
+:set nu
+"
+"""是否换行
+:set wrap
+"
+"""搜索是否高亮
+:set hlsearch
+"
+"""是否自动缩进
+:set autoindent
+""
+set viminfo='1000
+
+"""显示左下角状态栏
+:set showmode
+
+"显示右下角状态栏
+"":set ruler
+"
+"""设置命令行高度
+:set cmdheight=1
+
+""为光标所在行添加下划线
+:set cursorline
+
+:set smarttab
+
+"设置tab替换为4个空格
+set ts=4
+set expandtab
+set autoindent
+"
+"""设置换行自动缩进为4个空格
+:set shiftwidth=4
+
+""括号高亮的时间
+:set matchtime=3
+
+"""设置文本编码
+:set encoding=utf8
+:set fileencodings=ucs-bom,utf-8,cp936
+:set termencoding=utf8
+
+autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | execute 'normal! g`"' | endif
