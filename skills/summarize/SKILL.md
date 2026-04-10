@@ -1,6 +1,6 @@
 ---
 name: summarize
-description: 开发完成后的总结归档。收集开发过程资料，生成完整的迭代文档（基本信息、原始需求、需求分析过程、实现方案、问题与解决方案、反思与复盘共 6 节，Markdown 格式，保存到 docs/archives/ 目录），清理状态文件。用户手动触发。当用户说"总结"、"归档"、"summarize"、"代码已合入"时触发。前提：review-and-fix 阶段已完成（代码已推送并合入）。这是工作流的终止阶段。
+description: 开发完成后的总结归档。收集开发过程资料，生成完整的迭代文档（基本信息、原始需求、需求分析过程、实现方案、问题与解决方案、反思与复盘共 6 节，Markdown 格式，保存到 .devpipe/summary.md），清理状态文件。用户手动触发。当用户说"总结"、"归档"、"summarize"、"代码已合入"时触发。前提：review-and-fix 阶段已完成（代码已推送并合入）。这是工作流的终止阶段。
 ---
 
 # 开发总结与归档（工作流终止阶段）
@@ -65,21 +65,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh summarize
 
 ## 步骤 3：生成迭代文档
 
-将收集的资料精炼为迭代文档，写入工作空间根目录的 `docs/archives/` 目录。文档面向团队成员阅读，用于知识沉淀和开发经验传承，所以内容要**完整、有深度**，清晰呈现一次开发任务从需求到落地的全过程，以及过程中的思考和收获。
-
-### 文件命名
-
-格式：`docs/archives/<开发日期>-issue<Issue编号>-<功能描述>.md`
-
-- 开发日期：8 位数字，格式 `YYYYMMDD`，从 `context.json` 的 `created_at` 字段获取；如无该字段，使用当前日期
-- Issue 编号：从 `context.json` 的 `github_issue` 字段获取
-- 功能描述：从 `context.json` 的 `description` 中提取，转为小写英文短横线格式，不超过 5 个词
-
-示例：
-- `docs/archives/20260101-issue42-broker-list-api.md`
-- `docs/archives/20260315-issue108-topic-permission-check.md`
-
-无 Issue 编号时省略 Issue 部分：`docs/archives/20260401-add-topic-validation.md`
+将收集的资料精炼为迭代文档，写入 `.devpipe/summary.md`（固定路径）。文档面向团队成员阅读，用于知识沉淀和开发经验传承，所以内容要**完整、有深度**，清晰呈现一次开发任务从需求到落地的全过程，以及过程中的思考和收获。
 
 ### 文档模板
 
@@ -223,7 +209,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh summarize --next-stage done
 | coding-plan.md 不存在 | 警告，文档中"实现方案"章节标注"（资料缺失）" |
 | task-progress.md 不存在 | 警告，文档中"问题与解决方案"章节标注"（资料缺失）" |
 | git log/diff 命令失败 | 警告，辅助信息省略 |
-| docs/archives/ 目录创建失败 | 报告错误，终止 |
+| .devpipe/summary.md 写入失败 | 报告错误，终止 |
 | 用户中途取消 | 已生成的文档保留，下次恢复 |
 
 ---

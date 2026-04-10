@@ -115,6 +115,20 @@ TITLE_KEYWORDS_MAP = {
     "cleanup": "优化重构",
 }
 
+# GitHub Issue label → 分支前缀映射
+LABEL_BRANCH_PREFIX = {
+    "feature": "feature-",
+    "bug": "fix-",
+    "refactor": "refactor-",
+}
+
+# GitHub Issue label → 开发类型映射
+LABEL_DEV_TYPE = {
+    "feature": "新功能",
+    "bug": "Bugfix",
+    "refactor": "优化重构",
+}
+
 
 @dataclass
 class StageInfo:
@@ -232,9 +246,9 @@ def query_github_issue(issue_input: str) -> Dict:
         labels = [label.get("name", "") for label in issue_data.get("labels", [])]
         dev_type = map_dev_type_from_labels(labels, issue_data.get("title", ""))
 
-        # 生成建议分支名
+        # 生成建议分支名（只含描述部分，不含前缀）
         title = issue_data.get("title", "")
-        suggested_branch = generate_branch_name(title, dev_type)
+        suggested_branch = generate_branch_name(title)
 
         return {
             "success": True,
@@ -244,6 +258,7 @@ def query_github_issue(issue_input: str) -> Dict:
                 "body": issue_data.get("body", ""),
                 "url": issue_data.get("url", f"https://github.com/{repo}/issues/{issue_number}"),
                 "dev_type": dev_type,
+                "labels": labels,
                 "suggested_branch": suggested_branch,
                 "repo": repo
             }
@@ -332,69 +347,60 @@ def query_icafe_card(card_input: str) -> Dict:
     return query_github_issue(card_input)
 
 
-def generate_branch_name(description: str, dev_type: str = "新功能") -> str:
+def generate_branch_name(description: str) -> str:
     """
-    根据描述生成语义化分支名。
+    根据描述生成分支名的描述部分（不含前缀）。
 
     先尝试用 LLM 生成语义化的名称，失败时 fallback 到关键词提取逻辑。
 
     Args:
         description: 功能描述或 Issue 标题
-        dev_type: 开发类型（新功能/Bugfix/优化重构）
 
     Returns:
-        分支名，如 feature-add-login, fix-memory-leak, refactor-cleanup-code
+        分支名描述部分，如 add-login, memory-leak-fix, cleanup-code（不含前缀）
     """
-    # 获取语义化前缀
-    prefix = BRANCH_PREFIXES.get(dev_type, "feature-")
-
     # 先尝试 LLM 生成
     try:
-        llm_name = _generate_branch_name_by_llm(description, dev_type)
+        llm_name = _generate_branch_name_by_llm(description)
         if llm_name:
             return llm_name
     except Exception:
         pass
 
     # fallback 到原有逻辑
-    short_name = _generate_short_name(description)
-    return f"{prefix}{short_name}"
+    return _generate_short_name(description)
 
 
-def _generate_branch_name_by_llm(description: str, dev_type: str = "新功能") -> Optional[str]:
+def _generate_branch_name_by_llm(description: str) -> Optional[str]:
     """
-    使用 LLM 生成语义化的分支名
+    使用 LLM 生成语义化的分支名描述部分（不含前缀）
 
     Args:
         description: 功能描述或 Issue 标题
-        dev_type: 开发类型
 
     Returns:
-        分支名（如 feature-add-login），或 None 表示失败
+        分支名描述部分（如 add-login），或 None 表示失败
     """
     if not description or not description.strip():
         return None
 
     client = _get_llm_client()
-    prefix = BRANCH_PREFIXES.get(dev_type, "feature-")
 
-    prompt = f"""根据以下功能描述，生成一个简短的开发分支名。
+    prompt = f"""根据以下功能描述，生成一个简短的 kebab-case 描述短语，用于开发分支名的一部分。
 
 要求：
-1. 格式：<prefix><简短描述>，使用 kebab-case（小写字母和连字符）
-2. 前缀：{prefix}（根据开发类型自动选择）
-3. 长度：总长度不超过 30 个字符
-4. 内容：用 2-4 个英文单词概括核心功能，要有语义
-5. 只输出名称本身，不要任何解释
+1. 格式：纯 kebab-case（小写字母和连字符），不要包含任何前缀（如 feature-、fix-、refactor-）
+2. 长度：不超过 20 个字符
+3. 内容：用 2-4 个英文单词概括核心功能，要有语义
+4. 只输出描述短语本身，不要任何解释
 
 示例：
-- "Add 5.x cluster deployment support" + 新功能 → feature-5x-cluster-deploy
-- "Fix rollback issue during scaling" + Bugfix → fix-rollback-scaling
-- "Optimize message consumption performance" + 优化重构 → refactor-consume-perf
-- "Add metrics export feature" + 新功能 → feature-metrics-export
+- "Add 5.x cluster deployment support" → 5x-cluster-deploy
+- "Fix rollback issue during scaling" → rollback-scaling
+- "Optimize message consumption performance" → consume-perf
+- "Add metrics export feature" → metrics-export
 
-功能描述：{description}
-开发类型：{dev_type}"""
+功能描述：{description}"""
 
     response = client.chat.completions.create(
         model="cheap-text",
@@ -405,19 +411,18 @@ def _generate_branch_name_by_llm(description: str, dev_type: str = "新功能") 
     raw_name = response.choices[0].message.content.strip()
 
     # 清洗输出
-    return _clean_branch_name(raw_name, dev_type)
+    return _clean_branch_name(raw_name)
 
 
-def _clean_branch_name(raw_name: str, dev_type: str = "新功能") -> Optional[str]:
+def _clean_branch_name(raw_name: str) -> Optional[str]:
     """
-    清洗 LLM 输出的分支名
+    清洗 LLM 输出的分支名描述部分（不含前缀）
 
     Args:
         raw_name: LLM 原始输出
-        dev_type: 开发类型
 
     Returns:
-        清洗后的分支名，或 None 表示无效
+        清洗后的描述部分，或 None 表示无效
     """
     if not raw_name:
         return None
@@ -425,37 +430,33 @@ def _clean_branch_name(raw_name: str, dev_type: str = "新功能") -> Optional[s
     # 移除可能的引号和空白
     name = raw_name.strip().strip('"\'`')
 
-    # 获取期望的前缀
-    expected_prefix = BRANCH_PREFIXES.get(dev_type, "feature-")
-
-    # 如果已有正确的语义化前缀，保留
-    valid_prefixes = ["feature-", "fix-", "refactor-"]
-    has_valid_prefix = any(name.startswith(p) for p in valid_prefixes)
-
-    if not has_valid_prefix:
-        # 移除可能的 wt- 前缀（旧格式）
-        if name.startswith('wt-'):
-            name = name[3:]
-        # 添加正确的前缀
-        name = expected_prefix + name
+    # 剥离 LLM 可能生成的任何已知前缀
+    known_prefixes = ["feature-", "fix-", "refactor-", "bugfix-"]
+    for p in known_prefixes:
+        if name.startswith(p):
+            name = name[len(p):]
+            break
+    # 也处理旧格式 wt- 前缀
+    if name.startswith('wt-'):
+        name = name[3:]
 
     # 转换为 kebab-case：替换空格和下划线为连字符，移除非法字符
     name = re.sub(r'[\s_]+', '-', name)
-    name = re.sub(r'[^a-zA-Z0-9\-/]', '', name)
+    name = re.sub(r'[^a-zA-Z0-9\-]', '', name)
     name = name.lower()
 
     # 移除连续的连字符
     name = re.sub(r'-+', '-', name)
 
-    # 移除末尾的连字符
-    name = name.rstrip('-')
+    # 移除首尾的连字符
+    name = name.strip('-')
 
     # 长度限制
-    if len(name) > 30:
-        name = name[:30].rstrip('-')
+    if len(name) > 20:
+        name = name[:20].rstrip('-')
 
     # 验证结果
-    if len(name) < 5 or name in valid_prefixes:  # 太短或只有前缀，无效
+    if len(name) < 2:  # 太短，无效
         return None
 
     return name
@@ -747,7 +748,7 @@ def _run_init_script(task: CreateTask):
         raise CreateError("init-env.sh 脚本不存在", INIT_ENV_SCRIPT)
 
     # 构建命令
-    cmd = ["bash", INIT_ENV_SCRIPT, task.branch_name, task.base_branch, task.mode, "", task.github_issue or ""]
+    cmd = ["bash", INIT_ENV_SCRIPT, task.branch_name, task.base_branch, task.mode, DEVPIPE_ROOT, task.github_issue or ""]
 
     task.logs.append(f"执行: {' '.join(cmd)}")
 
@@ -789,7 +790,7 @@ def _run_init_script(task: CreateTask):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        cwd=DEVPIPE_ROOT,
+        cwd=REPO_ROOT,
         bufsize=1,
         env=env
     )
@@ -898,7 +899,7 @@ def _run_cleanup(task: CreateTask):
     try:
         result = subprocess.run(
             ["bash", CLEANUP_ENV_SCRIPT, task.branch_name],
-            cwd=DEVPIPE_ROOT,
+            cwd=REPO_ROOT,
             capture_output=True,
             text=True,
             timeout=60
@@ -1252,6 +1253,61 @@ def _cleanup_branch(branch: str):
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or "git branch -D 失败")
     return False, f"已删除分支 {branch}"
+
+
+def attach_devspace(branch_name: str) -> Dict:
+    """
+    通过 osascript 调用 iTerm2 打开新窗口并执行 tmux attach。
+
+    Args:
+        branch_name: 分支名
+
+    Returns:
+        {"success": True/False, "message"/"error": ...}
+    """
+    session_name = branch_name.replace("/", "-")
+
+    # 1. 校验 tmux session 是否存在
+    try:
+        result = subprocess.run(
+            ["tmux", "has-session", "-t", session_name],
+            capture_output=True, timeout=5
+        )
+        if result.returncode != 0:
+            return {"success": False, "error": f"tmux session 不存在: {session_name}"}
+    except FileNotFoundError:
+        return {"success": False, "error": "tmux 未安装"}
+    except subprocess.TimeoutExpired:
+        return {"success": False, "error": "检查 tmux session 超时"}
+
+    # 2. 检查 iTerm2 是否安装
+    if not os.path.exists("/Applications/iTerm.app"):
+        return {"success": False, "error": "iTerm2 未安装，请先安装 iTerm2"}
+
+    # 3. 通过 osascript 调用 iTerm2
+    applescript = f'''
+tell application "iTerm2"
+    activate
+    set newWindow to (create window with default profile)
+    tell current session of newWindow
+        write text "tmux attach -t {session_name}"
+    end tell
+end tell
+'''
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", applescript],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or "osascript 执行失败"
+            return {"success": False, "error": f"无法打开 iTerm2: {error_msg}"}
+    except subprocess.TimeoutExpired:
+        return {"success": False, "error": "打开 iTerm2 超时"}
+    except FileNotFoundError:
+        return {"success": False, "error": "osascript 不可用"}
+
+    return {"success": True, "message": "已在 iTerm2 中打开终端"}
 
 
 def cleanup_expired_tasks():

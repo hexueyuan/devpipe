@@ -46,7 +46,7 @@ bash scripts/stage-gate.sh review-and-fix
    - 无 commit 或无变更 → **立即终止**
 
 2. 检查是否已推送：
-   - 执行 `git log --oneline origin/<remote_branch>..HEAD 2>/dev/null` 检查是否有未推送的 commit
+   - 执行 `git log --oneline origin/<local_branch>..HEAD 2>/dev/null` 检查是否有未推送的 commit
    - 如果已推送（无未推送 commit）：
      - 检查 `.devpipe/phase2-fixplan.json` 是否存在 → 存在则跳到**步骤 7（Phase 2 询问）**
      - 不存在 → 检查用户当前消息是否包含完成意图 → 有则跳到**步骤 10**，否则跳到**步骤 9**
@@ -77,13 +77,13 @@ git diff --numstat HEAD~1 HEAD -- ':(exclude)*.md' ':(exclude)*Test.java' ':(exc
 按 [Git 命令参考](../../references/git_commands.md) 中的规则执行。远程分支从 `.devpipe/context.json` 获取。
 
 ```bash
-git push origin HEAD:<remote_branch>
+git push origin HEAD:<local_branch>
 ```
 
 ### 2L.2 创建 Pull Request
 
 ```bash
-gh pr create --title "#<github_issue> Short English description." --body "## Summary
+gh pr create --base <remote_branch> --title "#<github_issue> Short English description." --body "## Summary
 <变更摘要>
 
 Closes #<github_issue>"
@@ -212,7 +212,7 @@ git commit -m "#<github_issue> Fix review issues."
 在实际推送前，先执行 dry-run 确认推送内容：
 
 ```bash
-git push --dry-run origin HEAD:<remote_branch>
+git push --dry-run origin HEAD:<local_branch>
 ```
 
 将 dry-run 结果展示给用户，并使用 `AskUserQuestion` 确认是否推送。
@@ -220,7 +220,7 @@ git push --dry-run origin HEAD:<remote_branch>
 ### 6.3 推送到 GitHub
 
 ```bash
-git push origin HEAD:<remote_branch>
+git push origin HEAD:<local_branch>
 ```
 
 ### 6.4 创建 Pull Request
@@ -228,7 +228,7 @@ git push origin HEAD:<remote_branch>
 如果尚未创建 PR，使用 `gh` CLI 创建：
 
 ```bash
-gh pr create --title "#<github_issue> Short English description." --body "## Summary
+gh pr create --base <remote_branch> --title "#<github_issue> Short English description." --body "## Summary
 <变更摘要>
 
 Closes #<github_issue>"
@@ -302,7 +302,7 @@ git commit -m "#<github_issue> Fix should_fix review issues."
 ```
 
 ```bash
-git push origin HEAD:<remote_branch>
+git push origin HEAD:<local_branch>
 ```
 
 Phase 2 已由用户在步骤 7 确认意图，**不再需要 dry-run 和推送确认**。
@@ -326,7 +326,7 @@ Phase 2 已由用户在步骤 7 确认意图，**不再需要 dry-run 和推送�
 ```
 ========== 代码已推送（轻量模式） ==========
 评审：已跳过（源代码变更 < 50 行）
-代码推送：已推送到 <remote_branch>
+代码推送：已推送到 <local_branch>（PR 目标: <remote_branch>）
 Pull Request：已创建
 
 当前状态：等待 PR Review
@@ -349,7 +349,7 @@ Phase 2（should_fix）：
 - 修复：B 个 → 验证通过 → 已推送
   （或：用户选择跳过，B 个 should_fix 问题未修复）
 
-代码推送：已推送到 <remote_branch>
+代码推送：已推送到 <local_branch>（PR 目标: <remote_branch>）
 Pull Request：已创建
 
 当前状态：等待 PR Review
@@ -375,7 +375,7 @@ bash scripts/stage-complete.sh review-and-fix
 
 ```
 ========== review-and-fix 完成 ==========
-代码推送：已推送到 <remote_branch>
+代码推送：已推送到 <local_branch>（PR 目标: <remote_branch>）
 Pull Request：已创建/更新
 阶段状态：已完成
 
@@ -419,7 +419,7 @@ git commit -m "#<github_issue> Address review feedback."
 ```
 
 ```bash
-git push origin HEAD:<remote_branch>
+git push origin HEAD:<local_branch>
 ```
 
 ### 逻辑修改（需要更多上下文）
@@ -460,6 +460,7 @@ Agent 完成后，执行验证 → commit → push（同轻量修改流程）。
 | code-fixer 修复失败 | 展示失败条目，与用户讨论 |
 | 单测验证失败 | 修复后重试，3 轮后询问用户 |
 | push 失败 | 检查远程分支和权限，报告错误原因 |
+| `gh` 报 HTTP 401 | gh token 过期，在容器内或宿主机执行 `gh auth login -h github.com` 重新认证 |
 | 用户中途取消 | 已完成的修复保留在本地，下次恢复 |
 | Phase 1 推送成功但 Phase 2 修复失败 | 保留 Phase 1 已推送代码，与用户讨论是否重试或放弃 Phase 2 |
 | 会话在 Phase 1 推送后 Phase 2 前中断 | 通过 `.devpipe/phase2-fixplan.json` 恢复到步骤 7 |

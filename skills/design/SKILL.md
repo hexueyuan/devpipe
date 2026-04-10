@@ -166,6 +166,21 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 | 1 | <子任务名称> | <模块名> | <简要描述> |
 | 2 | <子任务名称> | <模块名> | <简要描述> |
 
+## 子任务详细说明
+
+### 子任务 1: <子任务名称>
+- **目标**: <该子任务要达成的具体目标>
+- **实现要点**:
+  - <关键实现步骤 1>
+  - <关键实现步骤 2>
+- **涉及文件**: <预计修改的文件路径列表>
+- **验收标准**:
+  - <该子任务的具体验收条件 1>
+  - <该子任务的具体验收条件 2>
+
+### 子任务 2: <子任务名称>
+...（每个子任务按上述格式逐一列出）
+
 ## 验收标准
 
 1. [技术层面的验收条件 1]
@@ -204,8 +219,8 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 要点：每个 git 命令独立执行（不用 `&&`），只 add 具体的源代码和测试文件，不要添加 devpipe 状态文件（.devpipe/coding-plan.md、.devpipe/prd.md、.devpipe/context.json）。
 - 首次提交: git add → git commit -m "#<Issue编号> English description."
 - review 修复后（review-and-fix 阶段）: git add → git commit -m "#<Issue编号> Fix review comments."
-- 推送（review-and-fix 阶段）: git push origin HEAD:<远程分支>
-- 创建 PR（review-and-fix 阶段）: gh pr create
+- 推送（review-and-fix 阶段）: git push origin HEAD:<本地分支>
+- 创建 PR（review-and-fix 阶段）: gh pr create --base <远程分支>
 ```
 
 #### 5B. 写入 `.devpipe/task-progress.md`（子任务进度，由 coding skill 更新）
@@ -270,9 +285,11 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 ### 步骤 8：创建任务列表并调用 devpipe:coding
 
-使用 `TaskCreate` 创建任务列表。每个子任务的 `description` 必须包含：
-- 具体需求和验收标准
-- 涉及的模块名称
+使用 `TaskCreate` 创建任务列表。每个子任务的 `description` 必须**从 `.devpipe/coding-plan.md` 的「子任务详细说明」章节中复制对应子任务的完整内容**，包含：
+- 目标
+- 实现要点
+- 涉及文件
+- 验收标准
 - 末尾固定追加一行：`执行方式：读取 .devpipe/coding-plan.md 中的"子任务 Agent 执行方式"，使用 Agent 工具执行。`
 
 > 这行文字确保上下文清空后，模型看到任务描述就知道去读进度文件获取执行方式。

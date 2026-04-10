@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devpipe Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -109,7 +112,7 @@
             <div class="wizard-panel active" data-step="1">
                 <div class="form-group">
                     <label for="issueInput">GitHub Issue（必填）</label>
-                    <input type="text" id="issueInput" class="full-width" placeholder="输入卡片 ID，如 810 或 BCE-ROCKETMQ-810">
+                    <input type="text" id="issueInput" class="full-width" placeholder="输入 GitHub Issue 链接，如 https://github.com/owner/repo/issues/123">
                     <div id="issueStatus" class="field-status"></div>
                     <div id="issueResult" class="card-result hidden">
                         <div class="card-info">
@@ -122,7 +125,7 @@
                 <div class="form-group">
                     <label for="baseBranch">基础分支</label>
                     <div class="input-with-btn">
-                        <input type="text" id="baseBranch" placeholder="默认 1.1.0-alpha" value="main">
+                        <input type="text" id="baseBranch" placeholder="默认 main" value="main">
                         <select id="branchMode">
                             <option value="remote">远程分支</option>
                             <option value="local">本地分支</option>
@@ -159,7 +162,10 @@
                 <div class="form-group">
                     <label for="branchName">开发空间名字</label>
                     <div class="input-with-btn">
-                        <input type="text" id="branchName" placeholder="feature-xxx">
+                        <div class="branch-input-group">
+                            <span class="branch-prefix" id="branchPrefix">feature-</span>
+                            <input type="text" id="branchName" placeholder="ui-optimization">
+                        </div>
                         <button type="button" class="refresh-btn" onclick="regenerateBranchName()">重新生成</button>
                     </div>
                     <div id="branchNameStatus" class="field-status"></div>
@@ -178,6 +184,10 @@
                     <div class="summary-row">
                         <span class="summary-label">开发类型</span>
                         <span class="summary-value" id="summaryDevType">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">分支名</span>
+                        <span class="summary-value" id="summaryBranchName">-</span>
                     </div>
                     <div class="summary-row">
                         <span class="summary-label">功能描述</span>
@@ -250,6 +260,7 @@
             issueQueried: false,   // 是否已成功查询卡片
             lastQueriedIssue: '',   // 上次查询的卡片 ID
             branchValidated: false, // 基础分支是否验证通过
+            branchPrefix: 'feature-', // 分支前缀（由 label 决定）
             taskId: null,          // 创建任务 ID
             pollTimer: null,       // 轮询定时器
             isLoading: false       // 是否正在加载
@@ -277,12 +288,13 @@
             state.issueQueried = false;
             state.lastQueriedIssue = '';
             state.branchValidated = false;
+            state.branchPrefix = 'feature-';
             state.taskId = null;
             state.isLoading = false;
 
             // 重置表单
             document.getElementById('issueInput').value = '';
-            document.getElementById('baseBranch').value = '1.1.0-alpha';
+            document.getElementById('baseBranch').value = 'main';
             document.getElementById('branchMode').value = 'remote';
             document.getElementById('devType').value = '';
             document.getElementById('description').value = '';
@@ -296,6 +308,7 @@
             document.getElementById('branchStatus').className = 'field-status';
             document.getElementById('branchNameStatus').textContent = '';
             document.getElementById('branchNameStatus').className = 'field-status';
+            document.getElementById('branchPrefix').textContent = 'feature-';
             document.getElementById('devTypeHint').textContent = '自动从 GitHub Issue类型推断';
 
             // 重置 Step 2 显示字段
@@ -527,15 +540,11 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // 验证Issue 类型（支持 Task/Tech Task/Bug/Bug(线上) 及其中文名）
+                    // 验证Issue 类型（支持后端映射后的开发类型：新功能、Bugfix、优化重构）
                     const allowedTypePatterns = [
-                        /^bug$/i,
-                        /^bug\s*\(线上\)$/i,  // Bug(线上)
-                        /^缺陷$/,
-                        /^task$/i,
-                        /^任务$/,
-                        /^tech\s*task$/i,
-                        /^技术任务$/,
+                        /^新功能$/,
+                        /^bugfix$/i,
+                        /^优化重构$/,
                     ];
                     const cardType = result.data.dev_type || '';
                     const isAllowedType = allowedTypePatterns.some(pattern => pattern.test(cardType));
@@ -544,7 +553,7 @@
                         state.issueData = null;
                         state.issueQueried = false;
                         state.lastQueriedIssue = '';
-                        showFieldStatus('issueStatus', `不支持的Issue 类型"${cardType}"，仅支持 Task/Tech Task/Bug/Bug(线上)`, 'error');
+                        showFieldStatus('issueStatus', `不支持的Issue 类型"${cardType}"，仅支持 新功能/Bugfix/优化重构`, 'error');
                         document.getElementById('issueResult').classList.add('hidden');
                         return false;
                     }
@@ -553,6 +562,23 @@
                     state.issueQueried = true;
                     state.lastQueriedIssue = issueInput_val;
                     showFieldStatus('issueStatus', '查询成功', 'success');
+
+                    // 从 labels 推断分支前缀
+                    const LABEL_BRANCH_PREFIX = {
+                        "feature": "feature-",
+                        "bug": "fix-",
+                        "refactor": "refactor-",
+                    };
+                    const labels = result.data.labels || [];
+                    let inferredPrefix = 'feature-'; // 默认
+                    for (const label of labels) {
+                        if (LABEL_BRANCH_PREFIX[label]) {
+                            inferredPrefix = LABEL_BRANCH_PREFIX[label];
+                            break;
+                        }
+                    }
+                    state.branchPrefix = inferredPrefix;
+                    document.getElementById('branchPrefix').textContent = state.branchPrefix;
 
                     // 显示卡片信息
                     const resultEl = document.getElementById('issueResult');
@@ -676,14 +702,14 @@
                 } else {
                     // API 失败时使用默认名称
                     const ts = new Date().toISOString().slice(5, 16).replace(/[-:T]/g, '');
-                    document.getElementById('branchName').value = `feature-dev-${ts}`;
+                    document.getElementById('branchName').value = `dev-${ts}`;
                     showFieldStatus('branchNameStatus', '使用默认分支名', 'info');
                     return true;
                 }
             } catch (e) {
                 // 网络失败时使用默认名称
                 const ts = new Date().toISOString().slice(5, 16).replace(/[-:T]/g, '');
-                document.getElementById('branchName').value = `feature/dev-${ts}`;
+                document.getElementById('branchName').value = `dev-${ts}`;
                 showFieldStatus('branchNameStatus', '使用默认分支名', 'info');
                 return true;
             }
@@ -701,14 +727,16 @@
         }
 
         async function checkBranchConflicts() {
-            const branchName = document.getElementById('branchName').value.trim();
-            if (!branchName) return;
+            const branchDesc = document.getElementById('branchName').value.trim();
+            if (!branchDesc) return;
+
+            const fullBranchName = state.branchPrefix + branchDesc;
 
             try {
                 const response = await fetch('/api/devspace/check-conflicts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ branch_name: branchName })
+                    body: JSON.stringify({ branch_name: fullBranchName })
                 });
                 const result = await response.json();
 
@@ -729,11 +757,14 @@
         // ========================
         function updateSummary() {
             document.getElementById('summaryIssue').textContent =
-                state.issueData ? state.issueData.id : '-';
+                state.issueData ? state.issueData.number : '-';
             document.getElementById('summaryBaseBranch').textContent =
-                document.getElementById('baseBranch').value || '1.1.0-alpha';
+                document.getElementById('baseBranch').value || 'main';
             document.getElementById('summaryDevType').textContent =
                 document.getElementById('devType').value || '-';
+            const branchDesc = document.getElementById('branchName').value || '';
+            document.getElementById('summaryBranchName').textContent =
+                branchDesc ? state.branchPrefix + branchDesc : '-';
             document.getElementById('summaryDescription').textContent =
                 document.getElementById('description').value || '-';
         }
@@ -742,15 +773,17 @@
         // 创建任务
         // ========================
         async function startCreate() {
-            const branchName = document.getElementById('branchName').value.trim();
+            const branchDesc = document.getElementById('branchName').value.trim();
             const baseBranch = document.getElementById('baseBranch').value.trim();
             const mode = document.getElementById('branchMode').value;
             const devType = document.getElementById('devType').value;
             const description = document.getElementById('description').value.trim();
 
-            // 验证
-            if (!branchName || !branchName.startsWith('feature-') && !branchName.startsWith('fix-') && !branchName.startsWith('refactor-')) {
-                showFieldStatus('branchNameStatus', '分支名必须以 feature-, fix- 或 refactor- 开头', 'error');
+            // 拼接完整分支名：前缀 + 描述
+            const branchName = state.branchPrefix + branchDesc;
+
+            if (!branchDesc) {
+                showFieldStatus('branchNameStatus', '请输入分支名描述部分', 'error');
                 return;
             }
 

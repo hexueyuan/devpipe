@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ wt.name }} - Worktree Detail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -20,10 +23,10 @@
                 </h1>
                 <div class="detail-header-actions">
                     {% if wt.is_archived %}
-                    <a class="attach-btn disabled" title="已归档，无法进入">进入开发空间</a>
+                    <button class="attach-btn disabled" disabled title="已归档，无法进入">进入开发空间</button>
                     <button class="cleanup-btn" disabled title="已归档，无法删除">删除开发空间</button>
                     {% else %}
-                    <a class="attach-btn" href="devflow-attach://{{ wt.name }}">进入开发空间</a>
+                    <button class="attach-btn" id="attachBtn" onclick="attachDevspace('{{ wt.name }}')">进入开发空间</button>
                     <button class="cleanup-btn" onclick="openCleanupModal('{{ wt.name }}')">删除开发空间</button>
                     {% endif %}
                 </div>
@@ -162,10 +165,17 @@
             <div class="stage-document-panel" id="doc-{{ stage_name }}" style="display: none;">
                 {% if doc %}
                 <div class="stage-document-header">
-                    <span class="stage-file">{{ doc.filename }}</span>
-                    {% if doc.is_reviewing %}<span class="reviewing-badge">评审中</span>{% endif %}
+                    <div class="stage-document-header-left">
+                        <span class="stage-file">{{ doc.filename }}</span>
+                        {% if doc.is_reviewing %}<span class="reviewing-badge">评审中</span>{% endif %}
+                    </div>
+                    <button class="expand-btn" onclick="openDocumentModal('{{ stage_name }}')" title="全屏查看">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6V2H6M14 6V2H10M2 10V14H6M14 10V14H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="stage-document-body"><pre>{{ doc.content }}</pre></div>
+                <div class="stage-document-body" data-stage="{{ stage_name }}"><pre>{{ doc.content }}</pre></div>
                 {% else %}
                 <div class="empty-state">
                     <span class="empty-text">{{ wt.stage_placeholders.get(stage_name, '尚未生成文档') }}</span>
@@ -173,6 +183,19 @@
                 {% endif %}
             </div>
             {% endfor %}
+        </div>
+    </div>
+    <!-- 文档全屏弹窗 -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content fullscreen-modal">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <span class="stage-file" id="modalFilename"></span>
+                    <span class="reviewing-badge" id="modalReviewingBadge" style="display:none;">评审中</span>
+                </div>
+                <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+            </div>
+            <div class="fullscreen-document-body" id="modalDocumentBody"></div>
         </div>
     </div>
     {% include '_cleanup_modal.html' %}
@@ -199,10 +222,110 @@
                 var pre = el.querySelector('pre');
                 if (pre) el.innerHTML = '<div class="markdown-body">' + marked.parse(pre.textContent) + '</div>';
             });
+            // Markdown 渲染完成后，收集各阶段文档数据
+            initDocumentData();
             // done 阶段在时间轴中不显示，映射到 summarize
             var initialStage = currentSelectedStage === 'done' ? 'summarize' : currentSelectedStage;
             selectStage(initialStage);
         });
+
+        // ========================
+        // 文档全屏弹窗
+        // ========================
+        var stageDocuments = {};
+
+        function initDocumentData() {
+            document.querySelectorAll('.stage-document-panel').forEach(function(panel) {
+                var stageId = panel.id.replace('doc-', '');
+                var body = panel.querySelector('.stage-document-body');
+                if (!body) return;
+                var header = panel.querySelector('.stage-document-header');
+                var filename = header ? header.querySelector('.stage-file') : null;
+                var badge = header ? header.querySelector('.reviewing-badge') : null;
+                stageDocuments[stageId] = {
+                    html: body.innerHTML,
+                    filename: filename ? filename.textContent : '',
+                    isReviewing: !!badge
+                };
+            });
+        }
+
+        function openDocumentModal(stageName) {
+            var doc = stageDocuments[stageName];
+            if (!doc) return;
+            document.getElementById('modalFilename').textContent = doc.filename;
+            var badge = document.getElementById('modalReviewingBadge');
+            badge.style.display = doc.isReviewing ? 'inline-block' : 'none';
+            document.getElementById('modalDocumentBody').innerHTML = doc.html;
+            document.getElementById('documentModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDocumentModal() {
+            document.getElementById('documentModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 点击背景关闭文档弹窗
+        document.getElementById('documentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDocumentModal();
+        });
+
+        // ESC 关闭（文档弹窗优先）
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('documentModal').classList.contains('show')) {
+                closeDocumentModal();
+                e.stopImmediatePropagation();
+            }
+        });
+
+        // 进入开发空间
+        function attachDevspace(branchName) {
+            var btn = document.getElementById('attachBtn');
+            if (!btn || btn.disabled) return;
+
+            var originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '连接中...';
+            btn.classList.add('loading');
+
+            fetch('/api/devspace/attach', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({branch_name: branchName})
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                btn.classList.remove('loading');
+                if (data.success) {
+                    btn.textContent = '已打开';
+                    btn.classList.add('success');
+                    setTimeout(function() {
+                        btn.textContent = originalText;
+                        btn.classList.remove('success');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    btn.textContent = data.error || '连接失败';
+                    btn.classList.add('error');
+                    setTimeout(function() {
+                        btn.textContent = originalText;
+                        btn.classList.remove('error');
+                        btn.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(function() {
+                btn.classList.remove('loading');
+                btn.textContent = '网络错误';
+                btn.classList.add('error');
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.classList.remove('error');
+                    btn.disabled = false;
+                }, 3000);
+            });
+        }
     </script>
 </body>
 </html>

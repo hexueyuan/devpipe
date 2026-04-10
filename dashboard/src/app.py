@@ -17,6 +17,7 @@ try:
         probe_resources,
         check_uncommitted_changes,
         cleanup_devspace_async,
+        attach_devspace,
     )
 except ImportError:
     from worktree_service import get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context, STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
@@ -31,6 +32,7 @@ except ImportError:
         probe_resources,
         check_uncommitted_changes,
         cleanup_devspace_async,
+        attach_devspace,
     )
 
 app = Flask(__name__)
@@ -277,13 +279,13 @@ def api_check_conflicts():
 @app.route("/api/devspace/suggest-branch", methods=["POST"])
 def api_suggest_branch():
     """
-    根据描述生成建议分支名
+    根据描述生成建议分支名（仅描述部分，不含前缀）
 
     Request:
-        { "description": "Add deployment feature", "dev_type": "新功能" }
+        { "description": "Add deployment feature" }
 
     Response:
-        { "success": true, "branch_name": "feature-add-deployment" }
+        { "success": true, "branch_name": "add-deployment" }
     """
     data = request.get_json()
     if not data or "description" not in data:
@@ -293,8 +295,7 @@ def api_suggest_branch():
     if not description:
         return jsonify({"success": False, "error": "description 不能为空"})
 
-    dev_type = data.get("dev_type", "新功能")
-    branch_name = generate_branch_name(description, dev_type)
+    branch_name = generate_branch_name(description)
     return jsonify({"success": True, "branch_name": branch_name})
 
 
@@ -445,6 +446,33 @@ def api_devspace_cleanup():
 
     task_id = cleanup_devspace_async(branch_name, force)
     return jsonify({"success": True, "task_id": task_id})
+
+
+# ========================
+# 开发空间连接 API
+# ========================
+
+@app.route("/api/devspace/attach", methods=["POST"])
+def api_devspace_attach():
+    """
+    通过 iTerm2 连接开发空间
+
+    Request:
+        { "branch_name": "feature-xxx" }
+
+    Response (成功):
+        { "success": true, "message": "已在 iTerm2 中打开终端" }
+
+    Response (失败):
+        { "success": false, "error": "tmux session 不存在: xxx" }
+    """
+    data = request.get_json()
+    if not data or not data.get("branch_name", "").strip():
+        return jsonify({"success": False, "error": "缺少 branch_name 参数"})
+
+    branch_name = data["branch_name"].strip()
+    result = attach_devspace(branch_name)
+    return jsonify(result)
 
 
 if __name__ == "__main__":

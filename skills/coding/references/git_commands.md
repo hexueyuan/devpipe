@@ -6,8 +6,10 @@
 
 GitHub 使用标准 git push + Pull Request 工作流：
 
+> **注意**：`<branch-name>` 是功能分支（即 `local_branch`），不是 PR 的目标分支（`remote_branch`）。推送到功能分支后，通过 `gh pr create --base <目标分支>` 创建 PR。
+
 ```bash
-# 推送分支到远程
+# 推送分支到远程（推送到功能分支，非目标分支）
 git push origin HEAD:<branch-name>
 
 # 示例：推送当前分支
@@ -20,7 +22,7 @@ git push -u origin <branch-name>
 推送后使用 `gh` CLI 创建 Pull Request：
 
 ```bash
-gh pr create --title "#<Issue编号> Short English description." --body "## Summary
+gh pr create --base <目标分支> --title "#<Issue编号> Short English description." --body "## Summary
 - Change 1
 - Change 2
 

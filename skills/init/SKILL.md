@@ -248,6 +248,8 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init-env.sh <local-branch-name> <
 **字段说明：**
 - `stage`：当前所在阶段，可选值为 `init`、`discuss`、`design`、`coding`、`review-and-fix`、`summarize`、`done`，每个 skill 在执行时会更新此字段
 - `stage_completed`：当前阶段是否已完成（`true`/`false`）。`false` 表示阶段正在进行中，`true` 表示阶段已完成可进入下一阶段。init 阶段在写入 context.json 时工作（环境创建）已完成，故直接标记为 `true`
+- `remote_branch`：PR 的目标分支（即基础分支，如 `main`），用于 `gh pr create --base` 参数
+- `local_branch`：本地功能分支名（如 `feature/add-cluster-api`），用于 `git push origin HEAD:<local_branch>` 推送
 - `github_repo`：通过 `gh repo view --json nameWithOwner -q .nameWithOwner` 获取
 - `docs_path`：从 init-env.sh 输出的 `Devpipe Docs:` 行捕获，为 `.devpipe/docs/YYYYMMDD-issueNum-branchName/` 的绝对路径
 
@@ -378,6 +380,7 @@ digraph docker_layers {
 | 退出 Session（保持运行） | `Ctrl+B` 然后 `D` |
 | 手动进入容器 Shell | `docker exec -it <container-name> bash` |
 | 右 Panel Claude Code 意外退出 | 执行 `unset CLAUDECODE && Claude Code` |
+| 容器内 `gh` 报 HTTP 401 | gh token 过期，在容器内或宿主机执行 `gh auth login -h github.com` 重新认证 |
 | 容器内 git 操作 | 正常使用 git（独立 .git，不影响宿主机） |
 
 ## 参考文档

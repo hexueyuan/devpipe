@@ -50,10 +50,15 @@ RUN dnf install -y --allowerasing \
     && rm -rf /var/cache/dnf
 
 # 安装 GitHub CLI (gh)
-RUN dnf install -y 'dnf-command(config-manager)' \n    && dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo \n    && dnf install -y gh \n    && dnf clean all \n    && rm -rf /var/cache/dnf
+RUN dnf install -y 'dnf-command(config-manager)' \
+    && dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo \
+    && dnf install -y gh \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
 
 # 降低 SSH RSA 密钥长度限制
-RUN update-crypto-policies --set LEGACY \n    && sed -i 's/^RequiredRSASize.*/RequiredRSASize 1024/' /etc/crypto-policies/back-ends/openssh.config
+RUN update-crypto-policies --set LEGACY \
+    && sed -i 's/^RequiredRSASize.*/RequiredRSASize 1024/' /etc/crypto-policies/back-ends/openssh.config
 
 # ========================
 # Node.js 20.x

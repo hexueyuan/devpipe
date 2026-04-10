@@ -307,11 +307,6 @@ create_docker_container() {
         volumes+=(-v "$HOME/.ssh:/home/$HOST_USER/.ssh:rw")
     fi
 
-    # 可选：挂载 gh CLI 配置
-    if [ -d "$HOME/.config/gh" ]; then
-        volumes+=(-v "$HOME/.config/gh:/home/$HOST_USER/.config/gh:ro")
-    fi
-
     # 可选：挂载 .claude 配置目录（项目级）
     # 注意：不挂载为只读，因为 git checkout 可能需要修改其中的文件
     if [ -d "$REPO_ROOT/.claude" ]; then
@@ -398,6 +393,26 @@ init_container_git() {
 }
 
 # ========================
+# 初始化容器内 gh CLI 认证
+# ========================
+
+init_container_gh() {
+    echo "初始化容器内 gh CLI 认证..."
+    if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+        local gh_token
+        gh_token=$(gh auth token 2>/dev/null)
+        if [ -n "$gh_token" ]; then
+            echo "$gh_token" | docker exec -i "$CONTAINER_NAME" gh auth login --with-token
+            echo "gh CLI 认证完成"
+        else
+            echo "WARNING: 无法获取 gh token，跳过"
+        fi
+    else
+        echo "WARNING: 宿主机 gh CLI 未认证，跳过"
+    fi
+}
+
+# ========================
 # 初始化 Claude 配置
 # ========================
 
@@ -474,7 +489,7 @@ create_tmux_session() {
     sleep 1
 
     # 启动 Claude Code
-    tmux send-keys -t "$CONTAINER_NAME":0.1 "unset CLAUDECODE && Claude Code --dangerously-skip-permissions" Enter
+    tmux send-keys -t "$CONTAINER_NAME":0.1 "unset CLAUDECODE && claude --plugin-dir ./.claude/plugins/devpipe --dangerously-skip-permissions" Enter
 
     echo "Tmux Session 创建完成"
 }
@@ -504,6 +519,7 @@ main() {
     build_docker_image
     create_docker_container
     init_container_git
+    init_container_gh
     init_claude_config
     create_tmux_session
 

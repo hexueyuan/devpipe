@@ -311,12 +311,12 @@ Ducc: Fix Plan 已生成（3 条修复项）。
 
       git add <修复的文件>
       git commit --amend --no-edit
-      git push origin HEAD:main
+      git push origin HEAD:feature/snake-game-demo
 
       ========== review-and-fix 完成 ==========
       评审问题：4 个（已修复 3 / 跳过 1）
       单测验证：通过
-      代码推送：已推送到 main
+      代码推送：已推送到 feature/snake-game-demo（PR 目标: main）
 
       下一步：
       1. 等待 CR 通过
@@ -341,7 +341,7 @@ Ducc: 这是逻辑修改，启动 Agent 处理...
 
       git add <修改的文件>
       git commit --amend --no-edit
-      git push origin HEAD:main
+      git push origin HEAD:feature/snake-game-demo
       ✓ CR 反馈已处理
 ```
 
@@ -353,7 +353,7 @@ Ducc: 轻量修改，直接处理。
 
       git add <修改的文件>
       git commit --amend --no-edit
-      git push origin HEAD:main
+      git push origin HEAD:feature/snake-game-demo
       ✓ CR 反馈已处理
 ```
 
@@ -535,11 +535,11 @@ Ducc: [校验 context.json ✓ prd.md ✓，dev_type=Bugfix → 直接修复模�
 Ducc: [校验 context.json ✓, dev_type=Bugfix → 简化推送模式]
       Bugfix 模式：跳过自检评审，直接推送代码。
 
-      git push origin HEAD:main
+      git push origin HEAD:fix/conn-leak
 
       ========== review-and-fix 完成（Bugfix 模式） ==========
       评审：已跳过（Bugfix 直接推送）
-      代码推送：已推送到 main
+      代码推送：已推送到 fix/conn-leak（PR 目标: main）
 
       下一步：
       1. 等待 CR 通过

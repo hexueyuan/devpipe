@@ -5,29 +5,41 @@
 }
 
 :root {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-tertiary: #21262d;
-    --bg-card: #1c2128;
-    --border-color: #30363d;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #6e7681;
-    --accent-blue: #58a6ff;
-    --accent-green: #3fb950;
-    --accent-purple: #a371f7;
-    --accent-orange: #d29922;
-    --accent-red: #f85149;
-    --accent-cyan: #39c5cf;
-    --glow-blue: rgba(88, 166, 255, 0.3);
-    --glow-green: rgba(63, 185, 80, 0.3);
+    /* VoltAgent Design System - Deep Space Command Terminal */
+    --bg-primary: #050507;           /* Abyss Black */
+    --bg-secondary: #101010;         /* Carbon Surface */
+    --bg-tertiary: #1a1a1a;          /* Tertiary Background */
+    --bg-card: #101010;              /* Card Background */
+    --border-color: #3d3a39;         /* Warm Charcoal */
+    --text-primary: #f2f2f2;         /* Snow White */
+    --text-secondary: #b8b3b0;       /* Warm Parchment */
+    --text-muted: #8b949e;           /* Steel Slate */
+    --accent-blue: #00d992;          /* Unified to Emerald */
+    --accent-green: #00d992;         /* Emerald Signal Green */
+    --accent-purple: #818cf8;        /* Soft Purple */
+    --accent-orange: #ffba00;        /* Warning Amber */
+    --accent-red: #fb565b;           /* Danger Coral */
+    --accent-cyan: #00d992;          /* Unified to Emerald */
+    --accent-mint: #2fd6a1;          /* Button Text Mint */
+    --border-active: #00d992;        /* Active Border */
+    --glow-blue: rgba(0, 217, 146, 0.3);
+    --glow-green: rgba(0, 217, 146, 0.3);
+    --glow-green-strong: rgba(0, 217, 146, 0.5);
+    --shadow-ambient: rgba(92, 88, 85, 0.2) 0px 0px 15px;
+
+    /* Font Stacks */
+    --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
 }
 
 body {
-    font-family: "SF Mono", "Monaco", "Menlo", "Consolas", monospace;
+    font-family: var(--font-body);
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.5;
+    font-feature-settings: "calt", "rlig";
     min-height: 100vh;
 }
 
@@ -38,11 +50,13 @@ body {
 }
 
 h1 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.11;
+    letter-spacing: -0.65px;
     margin-bottom: 24px;
     color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
 }
 
 /* 页面头部 */
@@ -88,7 +102,7 @@ h1 {
 
 /* 统计卡片 - 按阶段分组 */
 .stat-discussing {
-    border-color: rgba(163, 113, 247, 0.3);
+    border-color: rgba(129, 140, 248, 0.3);
 }
 
 .stat-discussing .stat-value {
@@ -96,15 +110,15 @@ h1 {
 }
 
 .stat-developing {
-    border-color: rgba(57, 197, 207, 0.3);
+    border-color: rgba(0, 217, 146, 0.3);
 }
 
 .stat-developing .stat-value {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .stat-completed {
-    border-color: rgba(63, 185, 80, 0.3);
+    border-color: rgba(0, 217, 146, 0.3);
 }
 
 .stat-completed .stat-value {
@@ -115,7 +129,7 @@ h1 {
 .stage-badge {
     display: inline-block;
     font-size: 10px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     padding: 3px 10px;
     border-radius: 12px;
     font-weight: 500;
@@ -124,45 +138,45 @@ h1 {
 }
 
 .stage-init {
-    background-color: rgba(110, 118, 129, 0.15);
+    background-color: rgba(139, 148, 158, 0.15);
     color: var(--text-muted);
-    border: 1px solid rgba(110, 118, 129, 0.3);
+    border: 1px solid rgba(139, 148, 158, 0.3);
 }
 
 .stage-discuss {
-    background-color: rgba(163, 113, 247, 0.15);
+    background-color: rgba(129, 140, 248, 0.15);
     color: var(--accent-purple);
-    border: 1px solid rgba(163, 113, 247, 0.3);
+    border: 1px solid rgba(129, 140, 248, 0.3);
 }
 
 .stage-design {
-    background-color: rgba(210, 153, 34, 0.15);
+    background-color: rgba(255, 186, 0, 0.15);
     color: var(--accent-orange);
-    border: 1px solid rgba(210, 153, 34, 0.3);
+    border: 1px solid rgba(255, 186, 0, 0.3);
 }
 
 .stage-coding {
-    background-color: rgba(57, 197, 207, 0.15);
-    color: var(--accent-cyan);
-    border: 1px solid rgba(57, 197, 207, 0.3);
+    background-color: rgba(0, 217, 146, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(0, 217, 146, 0.3);
 }
 
 .stage-review-and-fix {
-    background-color: rgba(248, 81, 73, 0.15);
+    background-color: rgba(251, 86, 91, 0.15);
     color: var(--accent-red);
-    border: 1px solid rgba(248, 81, 73, 0.3);
+    border: 1px solid rgba(251, 86, 91, 0.3);
 }
 
 .stage-summarize {
-    background-color: rgba(63, 185, 80, 0.15);
+    background-color: rgba(0, 217, 146, 0.15);
     color: var(--accent-green);
-    border: 1px solid rgba(63, 185, 80, 0.3);
+    border: 1px solid rgba(0, 217, 146, 0.3);
 }
 
 .stage-done {
-    background-color: rgba(63, 185, 80, 0.25);
+    background-color: rgba(0, 217, 146, 0.25);
     color: var(--accent-green);
-    border: 1px solid rgba(63, 185, 80, 0.5);
+    border: 1px solid rgba(0, 217, 146, 0.5);
 }
 
 .stage-cell {
@@ -188,7 +202,7 @@ h1 {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+    background: linear-gradient(90deg, #00d992, #2fd6a1);
     border-radius: 3px;
     transition: width 0.3s ease;
 }
@@ -196,7 +210,7 @@ h1 {
 .progress-text {
     font-size: 11px;
     color: var(--text-muted);
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
 }
 
 /* 列表页表格 */
@@ -233,12 +247,12 @@ tr:last-child td {
 }
 
 .branch-name {
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
 }
 
 .branch-text, .branch-link {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .branch-link {
@@ -248,15 +262,15 @@ tr:last-child td {
 }
 
 .branch-link:hover {
-    color: var(--accent-blue);
-    text-shadow: 0 0 8px var(--glow-blue);
+    color: var(--accent-mint);
+    text-shadow: 0 0 8px var(--glow-green);
 }
 
 /* 类型标签 */
 .type-badge {
     display: inline-block;
     font-size: 10px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     padding: 3px 8px;
     border-radius: 4px;
     font-weight: 500;
@@ -268,27 +282,27 @@ tr:last-child td {
 }
 
 .type-新功能 {
-    background-color: rgba(63, 185, 80, 0.15);
+    background-color: rgba(0, 217, 146, 0.15);
     color: var(--accent-green);
-    border: 1px solid rgba(63, 185, 80, 0.3);
+    border: 1px solid rgba(0, 217, 146, 0.3);
 }
 
 .type-优化重构 {
-    background-color: rgba(88, 166, 255, 0.15);
-    color: var(--accent-blue);
-    border: 1px solid rgba(88, 166, 255, 0.3);
+    background-color: rgba(0, 217, 146, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(0, 217, 146, 0.3);
 }
 
 .type-Bugfix {
-    background-color: rgba(248, 81, 73, 0.15);
+    background-color: rgba(251, 86, 91, 0.15);
     color: var(--accent-red);
-    border: 1px solid rgba(248, 81, 73, 0.3);
+    border: 1px solid rgba(251, 86, 91, 0.3);
 }
 
 .type-archived {
-    background-color: rgba(110, 118, 129, 0.15);
+    background-color: rgba(139, 148, 158, 0.15);
     color: var(--text-muted);
-    border: 1px solid rgba(110, 118, 129, 0.3);
+    border: 1px solid rgba(139, 148, 158, 0.3);
 }
 
 .description {
@@ -301,7 +315,7 @@ tr:last-child td {
     white-space: nowrap;
     font-size: 12px;
     color: var(--text-muted);
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
 }
 
 /* 详情页 */
@@ -317,13 +331,13 @@ tr:last-child td {
 }
 
 .back-link:hover {
-    color: var(--accent-blue);
+    color: var(--accent-green);
 }
 
 .detail-header h1 {
     font-size: 22px;
     font-weight: 500;
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .detail-header-main {
@@ -396,17 +410,17 @@ tr:last-child td {
 }
 
 .detail-value a {
-    color: var(--accent-blue);
+    color: var(--accent-green);
     text-decoration: none;
     transition: text-shadow 0.2s;
 }
 
 .detail-value a:hover {
-    text-shadow: 0 0 8px var(--glow-blue);
+    text-shadow: 0 0 8px var(--glow-green);
 }
 
 .detail-mono {
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     color: var(--text-secondary);
     word-break: break-all;
@@ -420,14 +434,14 @@ tr:last-child td {
 
 /* 按钮 */
 .attach-btn {
-    background-color: var(--accent-green);
-    color: var(--bg-primary);
-    border: none;
+    background-color: var(--bg-secondary);
+    color: var(--accent-mint);
+    border: 1px solid var(--border-color);
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-weight: 500;
     transition: all 0.2s;
     box-shadow: 0 0 0 0 var(--glow-green);
@@ -443,6 +457,23 @@ tr:last-child td {
     opacity: 0.4;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+.attach-btn.loading {
+    background-color: var(--accent-blue);
+    opacity: 0.8;
+    cursor: wait;
+}
+
+.attach-btn.success {
+    background-color: var(--accent-green);
+    box-shadow: 0 0 16px var(--glow-green);
+}
+
+.attach-btn.error {
+    background-color: var(--accent-red);
+    color: #fff;
+    font-size: 11px;
 }
 
 /* 阶段进度条 */
@@ -488,8 +519,8 @@ tr:last-child td {
 
 /* 辅助分组 — 暗黄色系 */
 .stage-group-cell.group-auxiliary {
-    background-color: rgba(210, 153, 34, 0.04);
-    border-bottom: 2px solid rgba(210, 153, 34, 0.15);
+    background-color: rgba(255, 186, 0, 0.04);
+    border-bottom: 2px solid rgba(255, 186, 0, 0.15);
 }
 
 .stage-group-cell.group-auxiliary .group-name {
@@ -498,19 +529,19 @@ tr:last-child td {
 }
 
 .stage-group-cell.group-auxiliary.completed {
-    background-color: rgba(210, 153, 34, 0.08);
-    border-bottom-color: rgba(210, 153, 34, 0.6);
+    background-color: rgba(255, 186, 0, 0.08);
+    border-bottom-color: rgba(255, 186, 0, 0.6);
 }
 
 .stage-group-cell.group-auxiliary.current {
-    background-color: rgba(210, 153, 34, 0.08);
+    background-color: rgba(255, 186, 0, 0.08);
     border-bottom-color: var(--accent-orange);
 }
 
-/* 核心分组 — 醒目蓝色系 */
+/* 核心分组 — 醒目绿色系 */
 .stage-group-cell.group-core {
-    background-color: rgba(88, 166, 255, 0.06);
-    border-bottom: 2px solid rgba(88, 166, 255, 0.3);
+    background-color: rgba(0, 217, 146, 0.06);
+    border-bottom: 2px solid rgba(0, 217, 146, 0.3);
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
 }
@@ -520,13 +551,13 @@ tr:last-child td {
 }
 
 .stage-group-cell.group-core.completed {
-    background-color: rgba(63, 185, 80, 0.1);
+    background-color: rgba(0, 217, 146, 0.1);
     border-bottom-color: var(--accent-green);
 }
 
 .stage-group-cell.group-core.current {
-    background-color: rgba(57, 197, 207, 0.1);
-    border-bottom-color: var(--accent-cyan);
+    background-color: rgba(0, 217, 146, 0.1);
+    border-bottom-color: var(--accent-green);
 }
 
 .group-name {
@@ -537,12 +568,12 @@ tr:last-child td {
 
 .group-duration {
     font-size: 11px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     color: var(--text-muted);
 }
 
 .group-duration.in-progress {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
     font-style: italic;
 }
 
@@ -601,12 +632,12 @@ tr:last-child td {
 
 .stage-duration {
     font-size: 11px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     color: var(--text-muted);
 }
 
 .stage-duration.in-progress {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
     font-style: italic;
 }
 
@@ -633,7 +664,7 @@ tr:last-child td {
 .stage-item.auxiliary.completed .stage-circle {
     background-color: var(--accent-orange);
     border-color: var(--accent-orange);
-    box-shadow: 0 0 8px rgba(210, 153, 34, 0.3);
+    box-shadow: 0 0 8px rgba(255, 186, 0, 0.3);
 }
 
 .stage-item.completed .stage-circle::after {
@@ -643,16 +674,16 @@ tr:last-child td {
     font-weight: bold;
 }
 
-/* 核心阶段 active → 青色 + 脉冲 */
+/* 核心阶段 active → 绿色 + 脉冲 */
 .stage-item.core.active .stage-circle {
-    background-color: var(--accent-cyan);
-    border-color: var(--accent-cyan);
-    box-shadow: 0 0 16px rgba(57, 197, 207, 0.5);
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 16px var(--glow-green-strong);
     animation: pulse-active 2s infinite;
 }
 
 .stage-item.core.active .stage-label {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
     font-weight: 500;
 }
 
@@ -660,7 +691,7 @@ tr:last-child td {
 .stage-item.auxiliary.active .stage-circle {
     background-color: var(--accent-orange);
     border-color: var(--accent-orange);
-    box-shadow: 0 0 14px rgba(210, 153, 34, 0.5);
+    box-shadow: 0 0 14px rgba(255, 186, 0, 0.5);
     animation: pulse-muted 2s infinite;
 }
 
@@ -670,13 +701,13 @@ tr:last-child td {
 }
 
 @keyframes pulse-active {
-    0%, 100% { box-shadow: 0 0 16px rgba(57, 197, 207, 0.5); }
-    50% { box-shadow: 0 0 26px rgba(57, 197, 207, 0.8); }
+    0%, 100% { box-shadow: 0 0 16px rgba(0, 217, 146, 0.5); }
+    50% { box-shadow: 0 0 26px rgba(0, 217, 146, 0.8); }
 }
 
 @keyframes pulse-muted {
-    0%, 100% { box-shadow: 0 0 14px rgba(210, 153, 34, 0.5); }
-    50% { box-shadow: 0 0 22px rgba(210, 153, 34, 0.7); }
+    0%, 100% { box-shadow: 0 0 14px rgba(255, 186, 0, 0.5); }
+    50% { box-shadow: 0 0 22px rgba(255, 186, 0, 0.7); }
 }
 
 .stage-label {
@@ -703,7 +734,7 @@ tr:last-child td {
 /* 辅助连接线 completed → 暗黄 */
 .stage-connector.auxiliary.completed {
     background-color: var(--accent-orange);
-    box-shadow: 0 0 4px rgba(210, 153, 34, 0.3);
+    box-shadow: 0 0 4px rgba(255, 186, 0, 0.3);
 }
 
 /* 阶段可点击 */
@@ -716,10 +747,10 @@ tr:last-child td {
     transform: translateY(-2px);
 }
 
-/* 选中态：label 下方蓝色下划线 */
+/* 选中态：label 下方绿色下划线 */
 .stage-item.selected .stage-label {
-    color: var(--accent-blue);
-    border-bottom: 2px solid var(--accent-blue);
+    color: var(--accent-green);
+    border-bottom: 2px solid var(--accent-green);
     padding-bottom: 2px;
 }
 
@@ -737,11 +768,37 @@ tr:last-child td {
 
 .stage-document-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 10px;
     padding: 14px 24px;
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
+}
+
+.stage-document-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.expand-btn:hover {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
 }
 
 .stage-document-body {
@@ -756,7 +813,7 @@ tr:last-child td {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.6;
     overflow-x: auto;
@@ -790,13 +847,13 @@ tr:last-child td {
 }
 
 .stage-file {
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--accent-purple);
-    background-color: rgba(163, 113, 247, 0.15);
+    background-color: rgba(129, 140, 248, 0.15);
     padding: 4px 10px;
     border-radius: 4px;
-    border: 1px solid rgba(163, 113, 247, 0.3);
+    border: 1px solid rgba(129, 140, 248, 0.3);
 }
 
 .stage-content-body {
@@ -809,7 +866,7 @@ tr:last-child td {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.6;
     overflow-x: auto;
@@ -865,13 +922,13 @@ tr:last-child td {
 }
 
 .reviewing-badge {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    border: 1px solid rgba(255, 193, 7, 0.4);
+    background-color: rgba(255, 186, 0, 0.2);
+    color: #ffba00;
+    border: 1px solid rgba(255, 186, 0, 0.4);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     letter-spacing: 0.5px;
 }
 
@@ -894,7 +951,7 @@ tr:last-child td {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.6;
     overflow-x: auto;
@@ -922,7 +979,7 @@ tr:last-child td {
     font-size: 18px;
     margin-top: 28px;
     margin-bottom: 14px;
-    color: var(--accent-cyan);
+    color: var(--accent-green);
     font-weight: 500;
 }
 
@@ -952,7 +1009,7 @@ tr:last-child td {
     color: var(--accent-purple);
     padding: 2px 6px;
     border-radius: 4px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     border: 1px solid var(--border-color);
 }
@@ -996,7 +1053,7 @@ tr:last-child td {
 }
 
 .markdown-body blockquote {
-    border-left: 3px solid var(--accent-blue);
+    border-left: 3px solid var(--accent-green);
     padding-left: 16px;
     margin: 14px 0;
     color: var(--text-muted);
@@ -1010,7 +1067,7 @@ tr:last-child td {
 }
 
 .markdown-body a {
-    color: var(--accent-blue);
+    color: var(--accent-green);
     text-decoration: none;
 }
 
@@ -1045,8 +1102,8 @@ tr:last-child td {
 }
 
 .subtask-当前 {
-    border-color: var(--accent-cyan);
-    background-color: rgba(57, 197, 207, 0.08);
+    border-color: var(--accent-green);
+    background-color: rgba(0, 217, 146, 0.08);
 }
 
 .subtask-status {
@@ -1063,7 +1120,7 @@ tr:last-child td {
 }
 
 .subtask-当前 .subtask-status {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .subtask-待执行 .subtask-status {
@@ -1079,7 +1136,7 @@ tr:last-child td {
 .subtask-module {
     font-size: 11px;
     color: var(--text-muted);
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     background-color: var(--bg-secondary);
     padding: 2px 8px;
     border-radius: 4px;
@@ -1175,14 +1232,14 @@ tr:last-child td {
    创建按钮
    ======================== */
 .create-btn {
-    background-color: var(--accent-green);
-    color: var(--bg-primary);
-    border: none;
+    background-color: var(--bg-secondary);
+    color: var(--accent-mint);
+    border: 1px solid var(--border-color);
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-weight: 500;
     transition: all 0.2s;
     box-shadow: 0 0 0 0 var(--glow-green);
@@ -1268,6 +1325,29 @@ tr:last-child td {
     color: var(--text-primary);
 }
 
+/* 全屏文档弹窗 */
+.fullscreen-modal {
+    width: 1200px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fullscreen-document-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -1317,14 +1397,14 @@ tr:last-child td {
 }
 
 .wizard-step.active .step-number {
-    background-color: var(--accent-cyan);
-    border-color: var(--accent-cyan);
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
     color: var(--bg-primary);
-    box-shadow: 0 0 16px rgba(57, 197, 207, 0.5);
+    box-shadow: 0 0 16px var(--glow-green-strong);
 }
 
 .wizard-step.active .step-label {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .wizard-step.completed .step-number {
@@ -1378,7 +1458,7 @@ tr:last-child td {
     width: 100%;
     padding: 10px 12px;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -1390,8 +1470,8 @@ tr:last-child td {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--accent-cyan);
-    box-shadow: 0 0 0 3px rgba(57, 197, 207, 0.2);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(0, 217, 146, 0.2);
 }
 
 .form-group input::placeholder,
@@ -1413,6 +1493,31 @@ tr:last-child td {
     min-width: 120px;
 }
 
+/* 分支前缀标签 + 输入框组合 */
+.branch-input-group {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.branch-prefix {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 8px 4px 8px 12px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: inherit;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.branch-input-group input {
+    border-radius: 0 6px 6px 0;
+    flex: 1;
+}
+
 /* 全宽输入框（无附带按钮） */
 input.full-width {
     width: 100%;
@@ -1422,11 +1527,11 @@ input.full-width {
 .refresh-btn {
     padding: 10px 16px;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
-    background-color: var(--accent-blue);
-    border: none;
+    font-family: var(--font-mono);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    color: var(--bg-primary);
+    color: var(--accent-mint);
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
@@ -1434,7 +1539,7 @@ input.full-width {
 
 .query-btn:hover,
 .refresh-btn:hover {
-    box-shadow: 0 0 12px var(--glow-blue);
+    box-shadow: 0 0 12px var(--glow-green);
 }
 
 .field-status {
@@ -1452,7 +1557,7 @@ input.full-width {
 }
 
 .field-status.loading {
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .field-status.info {
@@ -1511,9 +1616,9 @@ input.full-width {
     font-size: 11px;
     padding: 2px 8px;
     border-radius: 4px;
-    background-color: rgba(163, 113, 247, 0.15);
+    background-color: rgba(129, 140, 248, 0.15);
     color: var(--accent-purple);
-    border: 1px solid rgba(163, 113, 247, 0.3);
+    border: 1px solid rgba(129, 140, 248, 0.3);
 }
 
 .card-title {
@@ -1580,8 +1685,8 @@ input.full-width {
 }
 
 #createPercent {
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
-    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    color: var(--accent-green);
 }
 
 .create-progress-bar {
@@ -1593,7 +1698,7 @@ input.full-width {
 
 .create-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+    background: linear-gradient(90deg, #00d992, #2fd6a1);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -1637,8 +1742,8 @@ input.full-width {
 }
 
 .stage-status.running {
-    border-color: var(--accent-cyan);
-    background-color: var(--accent-cyan);
+    border-color: var(--accent-green);
+    background-color: var(--accent-green);
     animation: pulse 1.5s infinite;
 }
 
@@ -1688,8 +1793,8 @@ input.full-width {
 }
 
 .toggle-logs:hover {
-    border-color: var(--accent-cyan);
-    color: var(--accent-cyan);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
 }
 
 #createLogs {
@@ -1698,7 +1803,7 @@ input.full-width {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     line-height: 1.5;
     color: var(--text-muted);
@@ -1720,7 +1825,7 @@ input.full-width {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     line-height: 1.5;
     color: var(--text-muted);
@@ -1773,13 +1878,13 @@ input.full-width {
 }
 
 .result-success .result-icon {
-    background-color: rgba(63, 185, 80, 0.2);
+    background-color: rgba(0, 217, 146, 0.2);
     color: var(--accent-green);
     border: 2px solid var(--accent-green);
 }
 
 .result-error .result-icon {
-    background-color: rgba(248, 81, 73, 0.2);
+    background-color: rgba(251, 86, 91, 0.2);
     color: var(--accent-red);
     border: 2px solid var(--accent-red);
 }
@@ -1806,9 +1911,9 @@ input.full-width {
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
-    color: var(--accent-cyan);
+    color: var(--accent-green);
 }
 
 .result-message {
@@ -1829,7 +1934,7 @@ input.full-width {
 .btn {
     padding: 10px 20px;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-weight: 500;
     border: none;
     border-radius: 6px;
@@ -1838,8 +1943,9 @@ input.full-width {
 }
 
 .btn-primary {
-    background-color: var(--accent-green);
-    color: var(--bg-primary);
+    background-color: var(--bg-secondary);
+    color: var(--accent-mint);
+    border: 1px solid var(--border-color);
 }
 
 .btn-primary:hover {
@@ -1854,8 +1960,8 @@ input.full-width {
 }
 
 .btn-secondary {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+    background-color: transparent;
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
@@ -1892,8 +1998,8 @@ input.full-width {
 
 .delete-btn:hover {
     color: var(--accent-red);
-    border-color: rgba(248, 81, 73, 0.3);
-    background-color: rgba(248, 81, 73, 0.1);
+    border-color: rgba(251, 86, 91, 0.3);
+    background-color: rgba(251, 86, 91, 0.1);
 }
 
 /* 详情页清理按钮 */
@@ -1905,15 +2011,15 @@ input.full-width {
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-weight: 500;
     transition: all 0.2s;
     margin-left: 12px;
 }
 
 .cleanup-btn:hover:not(:disabled) {
-    background-color: rgba(248, 81, 73, 0.15);
-    box-shadow: 0 0 12px rgba(248, 81, 73, 0.3);
+    background-color: rgba(251, 86, 91, 0.15);
+    box-shadow: 0 0 12px rgba(251, 86, 91, 0.3);
 }
 
 .cleanup-btn:disabled {
@@ -1967,15 +2073,15 @@ input.full-width {
     margin-left: auto;
     font-size: 11px;
     color: var(--text-muted);
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
 }
 
 /* 未提交变更警告 */
 .changes-warning {
     margin: 16px 0;
     padding: 16px;
-    background-color: rgba(248, 81, 73, 0.08);
-    border: 1px solid rgba(248, 81, 73, 0.3);
+    background-color: rgba(251, 86, 91, 0.08);
+    border: 1px solid rgba(251, 86, 91, 0.3);
     border-radius: 8px;
 }
 
@@ -1992,7 +2098,7 @@ input.full-width {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.5;
     color: var(--accent-red);
@@ -2014,14 +2120,14 @@ input.full-width {
 }
 
 .btn-danger:hover {
-    box-shadow: 0 0 16px rgba(248, 81, 73, 0.4);
+    box-shadow: 0 0 16px rgba(251, 86, 91, 0.4);
 }
 
 /* 清理弹窗 branch 名称 */
 .cleanup-branch-name {
-    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-family: var(--font-mono);
     font-size: 14px;
-    color: var(--accent-cyan);
+    color: var(--accent-green);
     margin-bottom: 16px;
 }
 
@@ -2031,4 +2137,104 @@ input.full-width {
     padding: 24px;
     color: var(--text-muted);
     font-size: 13px;
+}
+
+/* ========================
+   响应式增强
+   ======================== */
+
+/* 小屏手机 */
+@media (max-width: 420px) {
+    .container {
+        padding: 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    .stats-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 12px 16px;
+    }
+
+    .wizard-steps {
+        padding: 16px;
+    }
+
+    .wizard-connector {
+        width: 30px;
+        margin: 0 8px;
+    }
+
+    .step-label {
+        display: none;
+    }
+
+    .modal-content {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .create-stages {
+        grid-template-columns: 1fr;
+    }
+
+    .fullscreen-modal {
+        width: 100%;
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
+
+/* 平板 */
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stage-progress {
+        padding: 16px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .stage-connector {
+        display: none;
+    }
+
+    .detail-header-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .detail-header-actions {
+        width: 100%;
+    }
+
+    .detail-header-actions button {
+        flex: 1;
+    }
+}
+
+/* 大屏 */
+@media (min-width: 1440px) {
+    .container {
+        max-width: 1600px;
+    }
+
+    .detail-grid {
+        gap: 32px;
+    }
+
+    .stage-progress {
+        padding: 28px 32px;
+    }
 }

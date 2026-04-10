@@ -141,6 +141,10 @@ update_context() {
     jq --arg stage "$STAGE" \
        --arg now "$now" \
        '
+       .stage as $prev_stage |
+       (if ($prev_stage != null and $prev_stage != "" and $prev_stage != $stage)
+        then .stage_timestamps[$prev_stage].ended_at //= $now
+        else . end) |
        .stage = $stage |
        .stage_completed = false |
        .stage_timestamps[$stage] = {
