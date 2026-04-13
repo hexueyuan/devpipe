@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devpipe Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <!-- 加载遮罩 -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <div class="container">
+        <!-- 错误横幅 -->
+        <div id="errorBanner" class="error-banner" style="display:none;">
+            <span class="error-banner-icon">&#x26A0;</span>
+            <span class="error-banner-text" id="errorBannerText"></span>
+            <button class="error-banner-close" onclick="closeErrorBanner()">&times;</button>
+        </div>
+
+        <!-- 列表页 -->
+        <div id="page-list" style="display:none;">
+            <div class="page-header">
+                <h1>开发空间 <span id="modeIndicator"></span></h1>
+                <button class="create-btn" id="createBtnMain" onclick="openCreateModal()">+ 创建开发空间</button>
+            </div>
+
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card stat-discussing">
+                    <span class="stat-value" id="statDiscussing">0</span>
+                    <span class="stat-label">讨论中</span>
+                </div>
+                <div class="stat-card stat-developing">
+                    <span class="stat-value" id="statDeveloping">0</span>
+                    <span class="stat-label">开发中</span>
+                </div>
+                <div class="stat-card stat-completed">
+                    <span class="stat-value" id="statCompleted">0</span>
+                    <span class="stat-label">已完成</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>开发空间</th>
+                        <th>阶段</th>
+                        <th>进度</th>
+                        <th>工作概要</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="worktreeTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 详情页 -->
+        <div id="page-detail" style="display:none;">
+            <div class="detail-header">
+                <a href="#/" class="back-link">&larr; 返回列表</a>
+                <div class="detail-header-main">
+                    <h1 id="detailTitle"></h1>
+                    <div class="detail-header-actions" id="detailActions"></div>
+                </div>
+            </div>
+
+            <!-- 流程进度组件 -->
+            <div class="stage-progress-wrapper" id="stageProgressWrapper"></div>
+
+            <!-- 双列布局：基本信息 + 子任务进度 -->
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <h3 class="card-title">基本信息</h3>
+                    <div id="detailInfo"></div>
+                </div>
+                <div class="detail-card">
+                    <h3 class="card-title">子任务进度</h3>
+                    <div id="detailSubtasks"></div>
+                </div>
+            </div>
+
+            <!-- 阶段文档展示区 -->
+            <div class="stage-document-viewer" id="stageDocumentViewer"></div>
+        </div>
+    </div>
+
+    <!-- 文档全屏弹窗 -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content fullscreen-modal">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <span class="stage-file" id="modalFilename"></span>
+                    <span class="reviewing-badge" id="modalReviewingBadge" style="display:none;">评审中</span>
+                </div>
+                <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+            </div>
+            <div class="fullscreen-document-body" id="modalDocumentBody"></div>
+        </div>
+    </div>
+
+    <!-- 创建开发空间 Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>创建开发空间</h2>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">基本信息</span>
+                </div>
+                <div class="wizard-connector"></div>
+                <div class="wizard-step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">开发信息</span>
+                </div>
+                <div class="wizard-connector"></div>
+                <div class="wizard-step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">确认分支</span>
+                </div>
+                <div class="wizard-connector"></div>
+                <div class="wizard-step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">创建进度</span>
+                </div>
+            </div>
+
+            <div class="wizard-panel active" data-step="1">
+                <div class="form-group">
+                    <label for="issueInput">GitHub Issue（必填）</label>
+                    <input type="text" id="issueInput" class="full-width" placeholder="输入 GitHub Issue 链接，如 https://github.com/owner/repo/issues/123">
+                    <div id="issueStatus" class="field-status"></div>
+                    <div id="issueResult" class="card-result hidden">
+                        <div class="card-info">
+                            <span class="dev-type"></span>
+                            <span class="issue-title"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="baseBranch">基础分支</label>
+                    <div class="input-with-btn">
+                        <input type="text" id="baseBranch" placeholder="默认 main" value="main">
+                        <select id="branchMode">
+                            <option value="remote">远程分支</option>
+                            <option value="local">本地分支</option>
+                        </select>
+                    </div>
+                    <div id="branchStatus" class="field-status"></div>
+                </div>
+            </div>
+
+            <div class="wizard-panel" data-step="2">
+                <div class="form-group">
+                    <label>开发类型</label>
+                    <div class="readonly-field" id="devTypeDisplay">-</div>
+                    <input type="hidden" id="devType">
+                    <div id="devTypeHint" class="field-hint">自动从 GitHub Issue类型推断</div>
+                </div>
+                <div class="form-group">
+                    <label>功能描述</label>
+                    <div class="readonly-field" id="descriptionDisplay">-</div>
+                    <input type="hidden" id="description">
+                    <div class="field-hint">自动从 GitHub Issue标题填充</div>
+                </div>
+                <div class="form-group">
+                    <label>GitHub Issue详情</label>
+                    <div class="readonly-field multiline" id="issueBodyDisplay">-</div>
+                </div>
+            </div>
+
+            <div class="wizard-panel" data-step="3">
+                <div class="form-group">
+                    <label for="branchName">开发空间名字</label>
+                    <div class="input-with-btn">
+                        <div class="branch-input-group">
+                            <span class="branch-prefix" id="branchPrefix">feature-</span>
+                            <input type="text" id="branchName" placeholder="ui-optimization">
+                        </div>
+                        <button type="button" class="refresh-btn" onclick="regenerateBranchName()">重新生成</button>
+                    </div>
+                    <div id="branchNameStatus" class="field-status"></div>
+                </div>
+                <div class="confirm-summary">
+                    <h4>创建确认</h4>
+                    <div class="summary-row">
+                        <span class="summary-label">GitHub Issue</span>
+                        <span class="summary-value" id="summaryIssue">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">基础分支</span>
+                        <span class="summary-value" id="summaryBaseBranch">main</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">开发类型</span>
+                        <span class="summary-value" id="summaryDevType">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">分支名</span>
+                        <span class="summary-value" id="summaryBranchName">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">功能描述</span>
+                        <span class="summary-value" id="summaryDescription">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-panel" data-step="4">
+                <div class="create-progress">
+                    <div class="progress-header">
+                        <span id="createStage">准备中...</span>
+                        <span id="createPercent">0%</span>
+                    </div>
+                    <div class="create-progress-bar">
+                        <div class="create-progress-fill" id="createProgressFill"></div>
+                    </div>
+                </div>
+                <div class="create-stages" id="createStages"></div>
+                <div class="create-logs">
+                    <div class="logs-header">
+                        <span>日志</span>
+                        <button class="toggle-logs" onclick="toggleLogs()">展开</button>
+                    </div>
+                    <pre id="createLogs" class="collapsed"></pre>
+                </div>
+                <div id="createResult" class="create-result hidden">
+                    <div class="result-success hidden">
+                        <div class="result-icon">&#x2713;</div>
+                        <div class="result-title">开发环境创建完成</div>
+                        <div class="result-info">
+                            <p>进入开发环境：</p>
+                            <code id="resultCommand">tmux attach -t wt-xxx</code>
+                        </div>
+                    </div>
+                    <div class="result-error hidden">
+                        <div class="result-icon">&#x2717;</div>
+                        <div class="result-title">创建失败</div>
+                        <div class="result-message" id="resultError"></div>
+                        <div class="result-hint">已自动清理资源，可修改参数后重新创建</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()" style="display: none;">上一步</button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextStep()">下一步</button>
+                <button class="btn btn-primary" id="btnCreate" onclick="startCreate()" style="display: none;">开始创建</button>
+                <button class="btn btn-secondary" id="btnDone" onclick="closeCreateModal()" style="display: none;">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清理开发空间 Modal -->
+    <div id="cleanupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>清理开发空间</h2>
+                <button class="modal-close" onclick="closeCleanupModal()">&times;</button>
+            </div>
+
+            <div class="wizard-panel active" id="cleanupStep1">
+                <div class="cleanup-branch-name" id="cleanupBranchName"></div>
+                <div id="cleanupResourceLoading" class="field-status loading" style="text-align:center;padding:24px;">
+                    探测资源中...
+                </div>
+                <div id="cleanupResourceList" class="resource-list" style="display:none;"></div>
+                <div id="cleanupNoResources" class="no-resources-hint" style="display:none;">
+                    未检测到关联资源，无需清理
+                </div>
+            </div>
+
+            <div class="wizard-panel" id="cleanupStep2">
+                <div class="changes-warning">
+                    <div class="changes-warning-title">检测到未提交的变更</div>
+                    <pre class="changes-code" id="cleanupChangesCode"></pre>
+                    <div class="changes-warning-hint">强制清理将丢失以上未提交的变更，此操作不可撤销。</div>
+                </div>
+            </div>
+
+            <div class="wizard-panel" id="cleanupStep3">
+                <div class="create-progress">
+                    <div class="progress-header">
+                        <span id="cleanupStage">准备中...</span>
+                        <span id="cleanupPercent">0%</span>
+                    </div>
+                    <div class="create-progress-bar">
+                        <div class="create-progress-fill" id="cleanupProgressFill"></div>
+                    </div>
+                </div>
+                <div class="create-stages" id="cleanupStages"></div>
+                <div class="create-logs">
+                    <div class="logs-header">
+                        <span>日志</span>
+                        <button class="toggle-logs" onclick="toggleCleanupLogs()">展开</button>
+                    </div>
+                    <pre id="cleanupLogs" class="collapsed"></pre>
+                </div>
+                <div id="cleanupResult" class="create-result hidden">
+                    <div class="result-success hidden" id="cleanupResultSuccess">
+                        <div class="result-icon">&#x2713;</div>
+                        <div class="result-title">清理完成</div>
+                    </div>
+                    <div class="result-error hidden" id="cleanupResultError">
+                        <div class="result-icon">&#x2717;</div>
+                        <div class="result-title">清理失败</div>
+                        <div class="result-message" id="cleanupResultErrorMsg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cleanupBtnCancel" onclick="closeCleanupModal()">取消</button>
+                <button class="btn btn-danger" id="cleanupBtnNext" onclick="proceedToCleanup()" style="display:none;">下一步</button>
+                <button class="btn btn-danger" id="cleanupBtnForce" onclick="startCleanup(true)" style="display:none;">强制清理</button>
+                <button class="btn btn-secondary" id="cleanupBtnDone" onclick="closeCleanupModal(true)" style="display:none;">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

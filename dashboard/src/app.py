@@ -1,11 +1,14 @@
 import json
 import logging
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
 # 支持直接运行 python src/app.py 和模块运行 python -m src.app
 try:
-    from .worktree_service import get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context, STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
+    from .worktree_service import (
+        get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context,
+        STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
+    )
     from .config import REPO_ROOT, get_github_issue_url
     from .devspace_service import (
         query_github_issue,
@@ -20,7 +23,10 @@ try:
         attach_devspace,
     )
 except ImportError:
-    from worktree_service import get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context, STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
+    from worktree_service import (
+        get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context,
+        STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
+    )
     from config import REPO_ROOT, get_github_issue_url
     from devspace_service import (
         query_github_issue,
@@ -35,41 +41,60 @@ except ImportError:
         attach_devspace,
     )
 
-app = Flask(__name__)
+# docs 目录作为静态文件源
+DOCS_DIR = os.path.join(REPO_ROOT, 'docs')
 
+# 禁用默认 static 服务，改为从 docs/ 提供
+app = Flask(__name__, static_folder=None)
+
+
+# ========================
+# SPA 静态文件服务
+# ========================
 
 @app.route("/")
-def index():
-    """主页：展示 worktree 列表"""
+def serve_index():
+    """SPA 入口页面"""
+    return send_from_directory(DOCS_DIR, 'index.html')
+
+
+@app.route("/<path:path>")
+def serve_static(path):
+    """
+    服务静态文件。
+    API 路由由更具体的 @app.route 处理，此处仅服务静态文件。
+    如果文件存在于 docs/ 目录，返回该文件；否则返回 index.html（SPA fallback）。
+    """
+    # 排除 API 路径（理论上 Flask 已按优先级匹配，这里做双重保险）
+    if path.startswith('api/'):
+        return jsonify({"error": "Not found"}), 404
+
+    file_path = os.path.join(DOCS_DIR, path)
+    if os.path.isfile(file_path):
+        return send_from_directory(DOCS_DIR, path)
+    # SPA fallback: 所有非文件路由返回 index.html
+    return send_from_directory(DOCS_DIR, 'index.html')
+
+
+@app.route("/api/worktrees")
+def api_worktrees():
+    """API: 返回 JSON 格式的 worktree 列表（含子任务进度等展示数据）"""
     worktrees = get_all_worktrees(REPO_ROOT)
 
-    # 统计信息：按工作流阶段分组
-    # 讨论中：init、discuss、design
-    # 开发中：coding、review-and-fix
-    # 已完成：summarize、done
-    discussing_stages = {"init", "discuss", "design"}
-    developing_stages = {"coding", "review-and-fix"}
-    completed_stages = {"summarize", "done"}
-
-    stats = {
-        "讨论中": sum(1 for wt in worktrees if wt.stage in discussing_stages),
-        "开发中": sum(1 for wt in worktrees if wt.stage in developing_stages),
-        "已完成": sum(1 for wt in worktrees if wt.stage in completed_stages),
-    }
-
-    # 转换为模板友好的格式
-    worktree_data = []
+    result = []
     for wt in worktrees:
-        # 计算子任务完成进度
         completed = sum(1 for st in wt.subtasks if st.status == "已完成")
         total = len(wt.subtasks)
 
-        worktree_data.append({
+        result.append({
             "name": wt.name,
             "dev_type": wt.dev_type,
+            "description": wt.description,
             "summary": wt.summary,
+            "github_issue": wt.github_issue,
+            "github_issue_title": wt.github_issue_title,
+            "github_issue_url": wt.github_issue_url,
             "created_at": wt.created_at,
-            "updated_at": wt.updated_at,
             "stage": wt.stage,
             "stage_completed": wt.stage_completed,
             "stage_label": STAGE_LABELS.get(wt.stage, wt.stage),
@@ -78,12 +103,12 @@ def index():
             "is_archived": wt.is_archived
         })
 
-    return render_template("index.html", worktrees=worktree_data, stats=stats, stages=STAGES, stage_labels=STAGE_LABELS)
+    return jsonify({"worktrees": result})
 
 
-@app.route("/detail/<branch_name>")
-def detail(branch_name):
-    """详情页：展示单个 worktree 的详细信息"""
+@app.route("/api/worktree/<branch_name>")
+def api_worktree_detail(branch_name):
+    """API: 返回单个 worktree 的详细信息（含阶段文档原始内容）"""
     worktrees = get_all_worktrees(REPO_ROOT)
 
     wt_info = None
@@ -93,19 +118,16 @@ def detail(branch_name):
             break
 
     if wt_info is None:
-        return "分支不存在", 404
+        return jsonify({"error": "分支不存在"}), 404
 
-    # 获取开发阶段和文件内容（通过 parse_dev_context 读取容器内最新状态）
     context = parse_dev_context(wt_info.path)
-    stage, stage_content = get_dev_stage(wt_info.path, context)
+    stage, _stage_content = get_dev_stage(wt_info.path, context)
     stage_completed = context.get("stage_completed", True) if context else True
     dev_type = context.get("dev_type", "") if context else ""
     review_mode = context.get("review_mode", "") if context else ""
 
-    # 获取阶段文档映射
     stage_documents = get_stage_documents(wt_info.path, context)
 
-    # 构建占位文案映射
     stage_placeholders = {}
     for stage_name, stage_def in STAGE_DOCUMENT_MAP.items():
         if stage_name == "review-and-fix" and review_mode == "lightweight":
@@ -113,7 +135,7 @@ def detail(branch_name):
         else:
             stage_placeholders[stage_name] = stage_def.get("placeholder", "尚未生成文档")
 
-    wt_data = {
+    return jsonify({
         "name": wt_info.name,
         "path": wt_info.path,
         "dev_type": wt_info.dev_type,
@@ -122,68 +144,40 @@ def detail(branch_name):
         "github_issue_title": wt_info.github_issue_title,
         "github_issue_url": wt_info.github_issue_url,
         "created_at": wt_info.created_at,
-        "updated_at": wt_info.updated_at,
         "stage": stage,
         "stage_completed": stage_completed,
         "stage_label": STAGE_LABELS.get(stage, stage),
         "stage_documents": {
-            stage_name: doc for stage_name, doc in stage_documents.items()
+            sn: doc for sn, doc in stage_documents.items()
         },
         "stage_placeholders": stage_placeholders,
-        "subtasks": [{"index": st.index, "name": st.name, "module": st.module, "status": st.status} for st in wt_info.subtasks],
+        "subtasks": [
+            {"index": st.index, "name": st.name, "module": st.module, "status": st.status}
+            for st in wt_info.subtasks
+        ],
         "acceptance_criteria": wt_info.acceptance_criteria,
         "stage_times": [
             {
-                "stage": st.stage,
-                "label": st.label,
-                "started_at": st.started_at,
-                "ended_at": st.ended_at,
+                "stage": st.stage, "label": st.label,
+                "started_at": st.started_at, "ended_at": st.ended_at,
                 "duration_display": st.duration_display,
-                "is_current": st.is_current,
-                "is_completed": st.is_completed,
-                "is_core": st.is_core,
-                "roles": st.roles,
-                "role_desc": st.role_desc
+                "is_current": st.is_current, "is_completed": st.is_completed,
+                "is_core": st.is_core, "roles": st.roles, "role_desc": st.role_desc
             }
             for st in wt_info.stage_times
         ],
         "total_dev_time_display": wt_info.total_dev_time_display,
         "timeline_groups": [
             {
-                "name": g.name,
-                "stages": g.stages,
+                "name": g.name, "stages": g.stages,
                 "duration_seconds": g.duration_seconds,
                 "duration_display": g.duration_display,
-                "is_completed": g.is_completed,
-                "is_current": g.is_current
+                "is_completed": g.is_completed, "is_current": g.is_current
             }
             for g in wt_info.timeline_groups
         ],
         "is_archived": wt_info.is_archived
-    }
-
-    return render_template("detail.html", wt=wt_data, stages=STAGES, stage_labels=STAGE_LABELS)
-
-
-@app.route("/api/worktrees")
-def api_worktrees():
-    """API: 返回 JSON 格式的 worktree 列表"""
-    worktrees = get_all_worktrees(REPO_ROOT)
-
-    result = []
-    for wt in worktrees:
-        result.append({
-            "name": wt.name,
-            "dev_type": wt.dev_type,
-            "description": wt.description,
-            "github_issue": wt.github_issue,
-            "github_issue_title": wt.github_issue_title,
-            "github_issue_url": wt.github_issue_url,
-            "created_at": wt.created_at,
-            "updated_at": wt.updated_at
-        })
-
-    return jsonify({"worktrees": result})
+    })
 
 
 # ========================
