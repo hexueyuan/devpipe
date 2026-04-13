@@ -842,11 +842,18 @@ def _run_init_script(task: CreateTask):
 def _write_context_json(task: CreateTask):
     """
     写入 context.json 文件
-    """
-    worktree_path = os.path.join(WORKTREE_DIR, task.branch_name.replace("/", "-"))
-    devflow_dir = os.path.join(worktree_path, ".devpipe")
 
-    # 目录应该已经被 init-env.sh 创建
+    写入到 docs_path（持久化目录），而非 worktree/.devpipe/。
+    Docker 容器将 docs_path bind mount 到 .devpipe，所以必须写入 docs_path
+    才能让容器内的 stage-gate.sh 找到 context.json。
+    """
+    # 优先使用 docs_path（Docker 挂载源），回退到 worktree/.devpipe/
+    if task.docs_path and os.path.isdir(task.docs_path):
+        devflow_dir = task.docs_path
+    else:
+        worktree_path = os.path.join(WORKTREE_DIR, task.branch_name.replace("/", "-"))
+        devflow_dir = os.path.join(worktree_path, ".devpipe")
+
     if not os.path.exists(devflow_dir):
         os.makedirs(devflow_dir, exist_ok=True)
 

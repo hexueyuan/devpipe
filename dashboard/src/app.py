@@ -41,10 +41,11 @@ except ImportError:
         attach_devspace,
     )
 
-# docs 目录作为静态文件源
-DOCS_DIR = os.path.join(REPO_ROOT, 'docs')
+# 前端 SPA 静态文件：从 devpipe 插件自身的 docs/ 目录读取
+_DEVPIPE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+STATIC_DIR = os.path.join(_DEVPIPE_ROOT, 'docs')
 
-# 禁用默认 static 服务，改为从 docs/ 提供
+# 禁用默认 static 服务，改为从 devpipe/docs/ 提供
 app = Flask(__name__, static_folder=None)
 
 
@@ -55,25 +56,25 @@ app = Flask(__name__, static_folder=None)
 @app.route("/")
 def serve_index():
     """SPA 入口页面"""
-    return send_from_directory(DOCS_DIR, 'index.html')
+    return send_from_directory(STATIC_DIR, 'index.html')
 
 
 @app.route("/<path:path>")
 def serve_static(path):
     """
-    服务静态文件。
+    服务静态文件（从 dashboard/public/ 提供）。
     API 路由由更具体的 @app.route 处理，此处仅服务静态文件。
-    如果文件存在于 docs/ 目录，返回该文件；否则返回 index.html（SPA fallback）。
+    如果文件存在于 public/ 目录，返回该文件；否则返回 index.html（SPA fallback）。
     """
     # 排除 API 路径（理论上 Flask 已按优先级匹配，这里做双重保险）
     if path.startswith('api/'):
         return jsonify({"error": "Not found"}), 404
 
-    file_path = os.path.join(DOCS_DIR, path)
+    file_path = os.path.join(STATIC_DIR, path)
     if os.path.isfile(file_path):
-        return send_from_directory(DOCS_DIR, path)
+        return send_from_directory(STATIC_DIR, path)
     # SPA fallback: 所有非文件路由返回 index.html
-    return send_from_directory(DOCS_DIR, 'index.html')
+    return send_from_directory(STATIC_DIR, 'index.html')
 
 
 @app.route("/api/worktrees")

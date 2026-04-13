@@ -72,8 +72,9 @@ def _read_devflow_file(worktree_path: str, filename: str, context: Optional[dict
 
     查找顺序：
     1. <worktree_path>/.devpipe/<filename>
-    2. <worktree_path>/<filename>（归档目录场景）
-    3. docker exec <container_name> cat <workspace_root>/.devpipe/<filename>
+    2. <docs_path>/<filename>（Docker 挂载源目录，容器内产出的文件在这里）
+    3. <worktree_path>/<filename>（归档目录场景）
+    4. docker exec <container_name> cat <workspace>/.devpipe/<filename>
     """
     # 1. 本地读取（尝试所有候选目录）
     for devflow_dir in _CONTAINER_DEVFLOW_DIRS:
@@ -85,7 +86,20 @@ def _read_devflow_file(worktree_path: str, filename: str, context: Optional[dict
             except IOError:
                 pass
 
-    # 1.5 直接在目录根下查找（归档目录场景）
+    # 2. docs_path（Docker bind mount 源目录）
+    # 容器内写入 .devpipe/<filename> 实际落到 docs_path/<filename>
+    if context:
+        docs_path = context.get("docs_path")
+        if docs_path:
+            docs_file = os.path.join(docs_path, filename)
+            if os.path.exists(docs_file):
+                try:
+                    with open(docs_file, "r", encoding="utf-8") as f:
+                        return f.read()
+                except IOError:
+                    pass
+
+    # 3. 直接在目录根下查找（归档目录场景）
     direct_path = os.path.join(worktree_path, filename)
     if os.path.exists(direct_path):
         try:
@@ -94,7 +108,7 @@ def _read_devflow_file(worktree_path: str, filename: str, context: Optional[dict
         except IOError:
             pass
 
-    # 2. 从容器读取
+    # 4. 从容器读取
     if context:
         container_name = context.get("container_name")
         workspace_root = context.get("workspace_root")
@@ -310,45 +324,76 @@ def branch_exists(repo_path: str, branch_name: str) -> bool:
 def parse_dev_context(worktree_path: str) -> Optional[dict]:
     """
     解析 worktree 的 devflow 上下文。
-    优先本地 .devpipe/context.json，然后尝试从容器读取最新版本并合并。
+
+    优先级：docs 目录（Docker bind mount 源）> 容器内 > worktree 本地。
+    docs 目录是容器的 .devpipe 挂载源，stage-gate.sh 的更新直接写入此处，
+    始终包含最新状态。worktree 本地仅作为 bootstrap 获取 docs_path 等静态字段。
     """
-    # 先读取本地 context（用于获取 container_name 等信息）
-    local_context = None
-    candidates = [
+    # 第一步：读取 worktree 本地 context 作为 bootstrap（获取 docs_path 等）
+    bootstrap_context = None
+    bootstrap_candidates = [
         os.path.join(worktree_path, ".devpipe", "context.json"),
         os.path.join(worktree_path, "context.json"),
     ]
-    for context_path in candidates:
+    for context_path in bootstrap_candidates:
         if not os.path.exists(context_path):
             continue
         try:
             with open(context_path, "r", encoding="utf-8") as f:
-                local_context = json.load(f)
+                bootstrap_context = json.load(f)
                 break
         except (json.JSONDecodeError, IOError):
             continue
 
-    if not local_context:
-        return None
+    # 第二步：从 docs 目录读取最新 context（Docker bind mount 源，最权威）
+    # 来源 1: bootstrap_context 中的 docs_path 字段
+    docs_path = bootstrap_context.get("docs_path") if bootstrap_context else None
+    if docs_path:
+        docs_context_file = os.path.join(docs_path, "context.json")
+        if os.path.exists(docs_context_file):
+            try:
+                with open(docs_context_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
 
-    # 尝试从容器读取最新 context（可能包含更新后的 stage）
-    container_name = local_context.get("container_name")
-    workspace_root = local_context.get("workspace_root")
-    if container_name and workspace_root and _docker_container_running(container_name):
-        for devflow_dir in _CONTAINER_DEVFLOW_DIRS:
-            container_content = _docker_cat(
-                container_name,
-                os.path.join(workspace_root, devflow_dir, "context.json")
-            )
-            if container_content:
-                try:
-                    container_context = json.loads(container_content)
-                    # 容器内的 context 更权威（stage 等字段可能已更新）
-                    return container_context
-                except json.JSONDecodeError:
-                    pass
+    # 来源 2: .devpipe/ 内 symlink 指向的 docs 目录
+    devpipe_dir = os.path.join(worktree_path, ".devpipe")
+    if os.path.isdir(devpipe_dir):
+        for entry in os.listdir(devpipe_dir):
+            entry_path = os.path.join(devpipe_dir, entry)
+            if os.path.islink(entry_path) and os.path.isdir(entry_path):
+                symlink_context = os.path.join(entry_path, "context.json")
+                if os.path.exists(symlink_context):
+                    try:
+                        with open(symlink_context, "r", encoding="utf-8") as f:
+                            return json.load(f)
+                    except (json.JSONDecodeError, IOError):
+                        pass
 
-    return local_context
+    # 第三步：容器回退（docs 不可用时）
+    if bootstrap_context:
+        container_name = bootstrap_context.get("container_name")
+        if container_name and _docker_container_running(container_name):
+            # 从 context 计算容器内工作目录
+            repo_root = bootstrap_context.get("repo_root", "")
+            repo_name = os.path.basename(repo_root) if repo_root else ""
+            host_user = os.path.basename(os.path.expanduser("~"))
+            workspace_root = f"/home/{host_user}/{repo_name}" if repo_name else None
+            if workspace_root:
+                for devflow_dir in _CONTAINER_DEVFLOW_DIRS:
+                    container_content = _docker_cat(
+                        container_name,
+                        os.path.join(workspace_root, devflow_dir, "context.json")
+                    )
+                    if container_content:
+                        try:
+                            return json.loads(container_content)
+                        except json.JSONDecodeError:
+                            pass
+
+    # 兜底：返回 bootstrap context
+    return bootstrap_context
 
 
 def get_branch_last_update(repo_path: str, branch: str) -> str:

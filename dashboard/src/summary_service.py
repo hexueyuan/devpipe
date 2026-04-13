@@ -55,6 +55,15 @@ def ensure_summary(dev_context_path: str) -> str | None:
     context_candidates = [
         os.path.join(dev_context_path, ".devpipe", "context.json"),
     ]
+
+    # 追加：检查 .devpipe/ 内 symlink 指向的 docs 目录
+    devpipe_dir = os.path.join(dev_context_path, ".devpipe")
+    if os.path.isdir(devpipe_dir):
+        for entry in os.listdir(devpipe_dir):
+            entry_path = os.path.join(devpipe_dir, entry)
+            if os.path.islink(entry_path) and os.path.isdir(entry_path):
+                context_candidates.append(os.path.join(entry_path, "context.json"))
+
     context_file = None
     for candidate in context_candidates:
         if os.path.exists(candidate):
