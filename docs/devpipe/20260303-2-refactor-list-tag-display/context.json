@@ -1,0 +1,35 @@
+{
+  "dev_type": "优化重构",
+  "description": "列表页新增开发类型标签和 GitHub Issue 引用展示",
+  "github_repo": "hexueyuan/devpipe",
+  "github_issue": "",
+  "github_issue_title": "",
+  "github_issue_url": "",
+  "local_branch": "refactor/list-tag-display",
+  "remote_branch": "main",
+  "created_at": "2026-03-03T14:00:00+08:00",
+  "stage": "done",
+  "stage_completed": true,
+  "stage_timestamps": {
+    "init": {
+      "started_at": "2026-03-03T14:00:00+08:00",
+      "ended_at": "2026-03-03T14:01:00+08:00"
+    },
+    "design": {
+      "started_at": "2026-03-03T14:01:00+08:00",
+      "ended_at": "2026-03-03T14:20:00+08:00"
+    },
+    "coding": {
+      "started_at": "2026-03-03T14:20:00+08:00",
+      "ended_at": "2026-03-03T15:10:00+08:00"
+    },
+    "review-and-fix": {
+      "started_at": "2026-03-03T15:10:00+08:00",
+      "ended_at": "2026-03-03T15:30:00+08:00"
+    },
+    "summarize": {
+      "started_at": "2026-03-03T15:30:00+08:00",
+      "ended_at": "2026-03-03T15:40:00+08:00"
+    }
+  }
+}
