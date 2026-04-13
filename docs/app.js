@@ -298,6 +298,19 @@ function getTimelineGroups(ctx, currentStage, devType) {
 }
 
 /**
+ * 格式化显示名称：去掉日期前缀、Issue编号和分支类型前缀
+ * 例如 "20260330-12-fix-attach-button-click" → "attach-button-click"
+ */
+function formatDisplayName(name) {
+    if (!name) return '';
+    // 去掉 YYYYMMDD-N- 前缀（日期+卡片号）
+    var stripped = name.replace(/^\d{8}-\d+-/, '');
+    // 去掉分支类型前缀 feature-/fix-/refactor-
+    stripped = stripped.replace(/^(?:feature|fix|refactor)-/, '');
+    return stripped;
+}
+
+/**
  * 格式化时间戳为 YYYY-MM-DD HH:MM:SS
  */
 function formatDatetime(value) {
@@ -394,7 +407,11 @@ async function githubApiFetch(path) {
 async function githubFileContent(path) {
     var data = await githubApiFetch(path);
     if (!data || !data.content) return null;
-    return atob(data.content.replace(/\n/g, ''));
+    // atob 只支持 Latin1，需要手动转 UTF-8
+    var binary = atob(data.content.replace(/\n/g, ''));
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
 }
 
 async function fetchIterationsFromGitHub() {
@@ -620,7 +637,7 @@ function renderListPage(iterations) {
 
         rows += '<tr>' +
             '<td class="branch-name">' + typeBadge +
-                '<a href="#/detail/' + encodeURIComponent(wt.name) + '" class="branch-link">' + escapeHtml(wt.name) + '</a></td>' +
+                '<a href="#/detail/' + encodeURIComponent(wt.name) + '" class="branch-link">' + escapeHtml(formatDisplayName(wt.name)) + '</a></td>' +
             '<td class="stage-cell"><span class="stage-badge stage-' + escapeHtml(wt.stage) + '">' + escapeHtml(wt.stage_label || STAGE_LABELS[wt.stage] || wt.stage) + '</span></td>' +
             '<td class="progress-cell">' + progressHtml + '</td>' +
             '<td class="description">' + escapeHtml(wt.summary || wt.description) + '</td>' +
@@ -644,7 +661,7 @@ function renderDetailPage(data) {
     if (data.dev_type && data.dev_type !== '-') {
         titleHtml += '<span class="type-badge type-' + escapeHtml(data.dev_type) + '">' + escapeHtml(data.dev_type) + '</span> ';
     }
-    titleHtml += escapeHtml(data.name);
+    titleHtml += escapeHtml(formatDisplayName(data.name));
     document.getElementById('detailTitle').innerHTML = titleHtml;
 
     // 操作按钮
@@ -928,7 +945,7 @@ async function showDetailPage(name) {
     document.getElementById('page-list').style.display = 'none';
     document.getElementById('page-detail').style.display = 'block';
     document.getElementById('loading').classList.remove('hidden');
-    document.title = name + ' - Devpipe Dashboard';
+    document.title = formatDisplayName(name) + ' - Devpipe Dashboard';
 
     try {
         var data = await fetchIterationDetail(name);
