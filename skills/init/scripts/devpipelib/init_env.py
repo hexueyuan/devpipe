@@ -441,6 +441,11 @@ class InitEnvRunner:
         if os.path.isdir(claude_dir):
             volumes.extend(["-v", f"{claude_dir}:{self.container_workspace}/.claude"])
 
+        # 项目配置的额外挂载
+        volumes.extend(
+            self.config.docker_mount_args(self.worktree_path, self.container_workspace)
+        )
+
         # 环境变量
         env_args = [
             "-e", f"HOME=/home/{self.host_user}",
