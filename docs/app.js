@@ -1071,6 +1071,7 @@ function resetWizard() {
     document.getElementById('issueBodyDisplay').textContent = '-';
 
     document.getElementById('createProgressFill').style.width = '0%';
+    document.getElementById('createProgressFill').className = 'create-progress-fill';
     document.getElementById('createPercent').textContent = '0%';
     document.getElementById('createStage').textContent = '准备中...';
     document.getElementById('createStages').innerHTML = '';

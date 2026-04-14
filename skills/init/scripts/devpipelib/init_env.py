@@ -26,6 +26,7 @@ class InitEnvParams:
     mode: str = "remote"  # "remote" or "local"
     devpipe_root: str = ""
     issue_num: str = ""
+    repo_root: str = ""  # 宿主仓库根目录，为空时自动探测
 
 
 @dataclass
@@ -47,8 +48,8 @@ class InitEnvRunner:
         self.params = params
         self._logger = logger
 
-        # 计算派生值
-        self.repo_root = self._get_repo_root()
+        # 计算派生值：优先使用传入的 repo_root，否则自动探测
+        self.repo_root = params.repo_root if params.repo_root else self._get_repo_root()
         self.worktree_dir = os.path.join(self.repo_root, ".devpipe", "worktrees")
         self.branch_dir_name = params.local_branch.replace("/", "-")
         self.worktree_path = os.path.join(self.worktree_dir, self.branch_dir_name)
@@ -419,16 +420,20 @@ class InitEnvRunner:
 
         # 创建持久化 docs 目录并创建 symlink
         os.makedirs(self.docs_path, exist_ok=True)
-        devpipe_link = os.path.join(self.worktree_path, ".devpipe")
+        devpipe_link = os.path.join(self.worktree_path, ".devpipe", "state")
         if os.path.islink(devpipe_link):
             os.remove(devpipe_link)
+        elif os.path.isdir(devpipe_link):
+            import shutil
+            shutil.rmtree(devpipe_link)
+        os.makedirs(os.path.dirname(devpipe_link), exist_ok=True)
         os.symlink(self.docs_path, devpipe_link)
 
         # 构建 volume 挂载参数
         volumes = [
             "-v", f"{self.worktree_path}:{self.container_workspace}",
             "-v", f"{self.git_volume}:{self.container_workspace}/.git",
-            "-v", f"{self.docs_path}:{self.container_workspace}/.devpipe",
+            "-v", f"{self.docs_path}:{self.container_workspace}/.devpipe/state",
         ]
 
         # 可选：挂载 SSH 密钥

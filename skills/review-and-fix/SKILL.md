@@ -48,7 +48,7 @@ bash scripts/stage-gate.sh review-and-fix
 2. 检查是否已推送：
    - 执行 `git log --oneline origin/<local_branch>..HEAD 2>/dev/null` 检查是否有未推送的 commit
    - 如果已推送（无未推送 commit）：
-     - 检查 `.devpipe/phase2-fixplan.json` 是否存在 → 存在则跳到**步骤 7（Phase 2 询问）**
+     - 检查 `.devpipe/state/phase2-fixplan.json` 是否存在 → 存在则跳到**步骤 7（Phase 2 询问）**
      - 不存在 → 检查用户当前消息是否包含完成意图 → 有则跳到**步骤 10**，否则跳到**步骤 9**
 
 **检测源代码变更量（排除文档和测试文件）：**
@@ -74,7 +74,7 @@ git diff --numstat HEAD~1 HEAD -- ':(exclude)*.md' ':(exclude)*Test.java' ':(exc
 
 ### 2L.1 推送到 GitHub
 
-按 [Git 命令参考](../../references/git_commands.md) 中的规则执行。远程分支从 `.devpipe/context.json` 获取。
+按 [Git 命令参考](../../references/git_commands.md) 中的规则执行。远程分支从 `.devpipe/state/context.json` 获取。
 
 ```bash
 git push origin HEAD:<local_branch>
@@ -120,9 +120,9 @@ Skill 工具参数：
 
 两个 Fix Plan 保持相同的 JSON 结构（`version`、`source`、`working_directory`），仅 `fixes` 数组内容不同。
 
-**创建 `.devpipe/review-status.md`（仅完整模式）：**
+**创建 `.devpipe/state/review-status.md`（仅完整模式）：**
 
-使用 Write 工具将评审概览和问题清单写入 `.devpipe/review-status.md`：
+使用 Write 工具将评审概览和问题清单写入 `.devpipe/state/review-status.md`：
 
 ```markdown
 # 评审修复状态
@@ -145,7 +145,7 @@ Skill 工具参数：
 
 **持久化 Phase 2 计划：**
 
-如果 Fix Plan B 非空，使用 Write 工具将 Fix Plan B 写入 `.devpipe/phase2-fixplan.json`，供进度恢复使用。
+如果 Fix Plan B 非空，使用 Write 工具将 Fix Plan B 写入 `.devpipe/state/phase2-fixplan.json`，供进度恢复使用。
 
 **展示拆分摘要（纯通知，不需用户确认）：**
 
@@ -189,13 +189,13 @@ Skill 工具参数：
 
 如果步骤 4 无代码改动（Fix Plan A 为空或所有问题已在评审前修复），跳过验证。
 
-**更新 `.devpipe/review-status.md`**：将 Phase 1 修复的问题状态更新为"已修复"，记录修复数和验证状态。
+**更新 `.devpipe/state/review-status.md`**：将 Phase 1 修复的问题状态更新为"已修复"，记录修复数和验证状态。
 
 ---
 
 ## 步骤 6：Phase 1 - Commit + Push + PR（完整模式）
 
-按 [Git 命令参考](../../references/git_commands.md) 中的规则执行。远程分支和 Issue 编号从 `.devpipe/context.json` 获取。
+按 [Git 命令参考](../../references/git_commands.md) 中的规则执行。远程分支和 Issue 编号从 `.devpipe/state/context.json` 获取。
 
 ### 6.1 如果有修复改动
 
@@ -234,21 +234,21 @@ gh pr create --base <remote_branch> --title "#<github_issue> Short English descr
 Closes #<github_issue>"
 ```
 
-**更新 `.devpipe/review-status.md`**：追加 PR 信息（PR URL 和远程分支）。
+**更新 `.devpipe/state/review-status.md`**：追加 PR 信息（PR URL 和远程分支）。
 
 **注意：** 每个 git 命令独立执行，不使用 `&&` 连接。
 
 ### 6.5 检查 Phase 2
 
 推送成功后：
-- 如果 `.devpipe/phase2-fixplan.json` 存在（Fix Plan B 非空）→ 继续**步骤 7**
+- 如果 `.devpipe/state/phase2-fixplan.json` 存在（Fix Plan B 非空）→ 继续**步骤 7**
 - 如果不存在（无 should_fix 问题）→ 跳到**步骤 9（PR Review 等待）**
 
 ---
 
 ## 步骤 7：Phase 2 - 询问用户
 
-Phase 1 已推送成功，GitHub Actions CI 已开始运行。读取 `.devpipe/phase2-fixplan.json` 中的 should_fix 条目，展示给用户并询问：
+Phase 1 已推送成功，GitHub Actions CI 已开始运行。读取 `.devpipe/state/phase2-fixplan.json` 中的 should_fix 条目，展示给用户并询问：
 
 ```json
 {
@@ -267,7 +267,7 @@ Phase 1 已推送成功，GitHub Actions CI 已开始运行。读取 `.devpipe/p
 ```
 
 - 用户选择「继续修复」→ 进入**步骤 8**
-- 用户选择「跳过」→ 删除 `.devpipe/phase2-fixplan.json`，跳到**步骤 9**
+- 用户选择「跳过」→ 删除 `.devpipe/state/phase2-fixplan.json`，跳到**步骤 9**
 
 ---
 
@@ -275,7 +275,7 @@ Phase 1 已推送成功，GitHub Actions CI 已开始运行。读取 `.devpipe/p
 
 ### 8.1 修复 should_fix
 
-读取 `.devpipe/phase2-fixplan.json`，调用 `devpipe:code-fixer` 执行修复：
+读取 `.devpipe/state/phase2-fixplan.json`，调用 `devpipe:code-fixer` 执行修复：
 
 ```
 Skill 工具参数：
@@ -313,7 +313,7 @@ Phase 2 已由用户在步骤 7 确认意图，**不再需要 dry-run 和推送�
 
 ### 8.5 清理
 
-推送成功后，删除 `.devpipe/phase2-fixplan.json`。
+推送成功后，删除 `.devpipe/state/phase2-fixplan.json`。
 
 ---
 
@@ -445,7 +445,7 @@ Agent 完成后，执行验证 → commit → push（同轻量修改流程）。
 |------|----------|
 | stage 为 `review-and-fix` + 未 push + 变更量 >= 50 行 | 从步骤 2（代码评审）重新开始 |
 | stage 为 `review-and-fix` + 未 push + 变更量 < 50 行 | 从步骤 2L（轻量模式）继续 |
-| stage 为 `review-and-fix` + 已 push + `.devpipe/phase2-fixplan.json` 存在 | 从步骤 7（Phase 2 询问）继续 |
+| stage 为 `review-and-fix` + 已 push + `.devpipe/state/phase2-fixplan.json` 存在 | 从步骤 7（Phase 2 询问）继续 |
 | stage 为 `review-and-fix` + 已 push + 无 `phase2-fixplan.json` | 跳到步骤 9（PR Review 等待） |
 | stage 为 `review-and-fix` + 已 push + 无 `phase2-fixplan.json` + 用户表示完成 | 步骤 10（标记阶段完成） |
 
@@ -463,7 +463,7 @@ Agent 完成后，执行验证 → commit → push（同轻量修改流程）。
 | `gh` 报 HTTP 401 | gh token 过期，在容器内或宿主机执行 `gh auth login -h github.com` 重新认证 |
 | 用户中途取消 | 已完成的修复保留在本地，下次恢复 |
 | Phase 1 推送成功但 Phase 2 修复失败 | 保留 Phase 1 已推送代码，与用户讨论是否重试或放弃 Phase 2 |
-| 会话在 Phase 1 推送后 Phase 2 前中断 | 通过 `.devpipe/phase2-fixplan.json` 恢复到步骤 7 |
+| 会话在 Phase 1 推送后 Phase 2 前中断 | 通过 `.devpipe/state/phase2-fixplan.json` 恢复到步骤 7 |
 
 ---
 
@@ -473,8 +473,8 @@ Agent 完成后，执行验证 → commit → push（同轻量修改流程）。
 |------|------|----------|
 | Skill (devpipe:code-reviewer) | 执行代码评审，输出 Fix Plan | 步骤 2 |
 | Skill (devpipe:code-fixer) | 按 Fix Plan 修复代码 | 步骤 4（Phase 1）、步骤 8.1（Phase 2） |
-| `.devpipe/context.json` | 远程分支、Issue 编号 | 步骤 1、步骤 6 |
-| `.devpipe/phase2-fixplan.json` | Phase 2 Fix Plan 持久化，供进度恢复 | 步骤 3（写入）、步骤 7（读取）、步骤 8.4/9（删除） |
+| `.devpipe/state/context.json` | 远程分支、Issue 编号 | 步骤 1、步骤 6 |
+| `.devpipe/state/phase2-fixplan.json` | Phase 2 Fix Plan 持久化，供进度恢复 | 步骤 3（写入）、步骤 7（读取）、步骤 8.4/9（删除） |
 | [Git 命令参考](../../references/git_commands.md) | commit + push 操作 | 步骤 6、步骤 8.3 |
 | `gh` CLI | 创建 PR、获取 Review | 步骤 6.4、Review 反馈处理 |
 

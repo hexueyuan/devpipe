@@ -43,7 +43,7 @@ Ducc: 开发环境已创建完成!
   开发信息已自动保存，无需重复输入。
 ```
 
-**产出**：`.devpipe/context.json`
+**产出**：`.devpipe/state/context.json`
 
 ---
 
@@ -52,7 +52,7 @@ Ducc: 开发环境已创建完成!
 tmux attach 进入新环境，在右 Panel 输入 `/devpipe:discuss`
 
 ```
-Ducc: [校验 .devpipe/context.json ✓]
+Ducc: [校验 .devpipe/state/context.json ✓]
       检测到开发上下文：积分功能（新功能），iCafe: SNAKE-100，
       远程分支: main。开始讨论需求。
 
@@ -107,10 +107,10 @@ Ducc: **持久化方案：**
 
 用户: 对
 
-Ducc: 需求文档已保存到 .devpipe/prd.md
+Ducc: 需求文档已保存到 .devpipe/state/prd.md
       正在派遣审查员检查需求文档...
 
-      审查通过！请查看 .devpipe/prd.md 确认，如有修改意见可以继续讨论。
+      审查通过！请查看 .devpipe/state/prd.md 确认，如有修改意见可以继续讨论。
       确认无误后我将进入方案设计阶段。
 
 用户: 没问题
@@ -119,7 +119,7 @@ Ducc: 需求讨论完成，接下来使用 devpipe:design 制定详细的实施�
       [自动调用 devpipe:design]
 ```
 
-**产出**：`.devpipe/prd.md`
+**产出**：`.devpipe/state/prd.md`
 
 ---
 
@@ -128,7 +128,7 @@ Ducc: 需求讨论完成，接下来使用 devpipe:design 制定详细的实施�
 自动串联进入
 
 ```
-Ducc: [校验 .devpipe/context.json ✓ .devpipe/prd.md ✓]
+Ducc: [校验 .devpipe/state/context.json ✓ .devpipe/state/prd.md ✓]
       我正在使用 devpipe:design 制定实施计划。
 
       识别到适用的模块开发规范：
@@ -163,12 +163,12 @@ Ducc: [校验 .devpipe/context.json ✓ .devpipe/prd.md ✓]
 Ducc: 正在派遣审查员检查计划...
       审查通过！
 
-      计划已保存到 .devpipe/coding-plan.md 和 .devpipe/task-progress.md
+      计划已保存到 .devpipe/state/coding-plan.md 和 .devpipe/state/task-progress.md
       接下来使用 devpipe:coding 执行开发。
       [自动调用 devpipe:coding]
 ```
 
-**产出**：`.devpipe/coding-plan.md` + `.devpipe/task-progress.md`
+**产出**：`.devpipe/state/coding-plan.md` + `.devpipe/state/task-progress.md`
 
 ---
 
@@ -177,7 +177,7 @@ Ducc: 正在派遣审查员检查计划...
 自动串联进入
 
 ```
-Ducc: [校验 .devpipe/context.json ✓ .devpipe/prd.md ✓ .devpipe/coding-plan.md ✓]
+Ducc: [校验 .devpipe/state/context.json ✓ .devpipe/state/prd.md ✓ .devpipe/state/coding-plan.md ✓]
       我正在使用 devpipe:coding 执行开发计划。
 
       子任务进度：4 个待执行
@@ -255,7 +255,7 @@ Ducc: [校验 .devpipe/context.json ✓ .devpipe/prd.md ✓ .devpipe/coding-plan
 自动串联进入
 
 ```
-Ducc: [校验 .devpipe/context.json ✓ stage: coding → 更新为 review-and-fix]
+Ducc: [校验 .devpipe/state/context.json ✓ stage: coding → 更新为 review-and-fix]
       我正在使用 devpipe:review-and-fix 执行代码评审、修复和推送。
 
       ── 代码评审 ──
@@ -368,7 +368,7 @@ Ducc: 轻量修改，直接处理。
 ```
 用户: 代码已合入了，/devpipe:summarize
 
-Ducc: [校验 .devpipe/context.json ✓ stage: review-and-fix → 更新为 summarize]
+Ducc: [校验 .devpipe/state/context.json ✓ stage: review-and-fix → 更新为 summarize]
       我正在使用 devpipe:summarize 进行开发总结与归档。
 
       ── 收集资料 ──
@@ -392,10 +392,10 @@ Ducc: [校验 .devpipe/context.json ✓ stage: review-and-fix → 更新为 summ
 
       ── 清理状态 ──
 
-      已删除: .devpipe/prd.md
-      已删除: .devpipe/coding-plan.md
-      已删除: .devpipe/task-progress.md
-      已更新: .devpipe/context.json (stage → done)
+      已删除: .devpipe/state/prd.md
+      已删除: .devpipe/state/coding-plan.md
+      已删除: .devpipe/state/task-progress.md
+      已更新: .devpipe/state/context.json (stage → done)
 
       ========== devpipe:summarize 完成 ==========
       迭代文档：docs/SNAKE-100-score-feature.md
@@ -442,14 +442,14 @@ Ducc: 开发环境已创建完成!
     tmux attach -t wt-fix-score-reset
 ```
 
-**产出**：`.devpipe/context.json`（`dev_type: "Bugfix"`）
+**产出**：`.devpipe/state/context.json`（`dev_type: "Bugfix"`）
 
 ---
 
 ### 2. `/devpipe:discuss`（需求讨论）
 
 ```
-Ducc: [校验 .devpipe/context.json ✓]
+Ducc: [校验 .devpipe/state/context.json ✓]
       检测到开发上下文：贪吃蛇穿墙后分数未重置（Bugfix），
       iCafe: SNAKE-88，远程分支: main。开始讨论需求。
 
@@ -477,7 +477,7 @@ Ducc: 重新开始游戏时，其他状态（蛇的长度、位置）是否正�
 
 Ducc: [分节呈现设计并获得确认]
 
-      修复方案已保存到 .devpipe/prd.md。
+      修复方案已保存到 .devpipe/state/prd.md。
       请查看确认，如有修改意见可以继续讨论。
       确认无误后我将进入编码阶段。
 
@@ -490,7 +490,7 @@ Ducc: 需求讨论完成。由于是 Bugfix 类型，跳过任务拆分，
 
 **注意**：discuss 完成后直接调用 `devpipe:coding`，**跳过了 `devpipe:design`**。
 
-**产出**：`.devpipe/prd.md`
+**产出**：`.devpipe/state/prd.md`
 
 ---
 
@@ -567,7 +567,7 @@ Ducc: [校验 context.json ✓, dev_type=Bugfix → 简化推送模式]
 如果在子任务 2 执行到一半时对话中断（关闭终端、上下文清空等），重新进入 tmux 输入 `/devpipe:coding`：
 
 ```
-Ducc: [校验 .devpipe/context.json ✓ .devpipe/prd.md ✓ .devpipe/coding-plan.md ✓]
+Ducc: [校验 .devpipe/state/context.json ✓ .devpipe/state/prd.md ✓ .devpipe/state/coding-plan.md ✓]
       检测到未完成的开发进度：
 
       | # | 子任务 | 模块 | 状态 |
@@ -633,15 +633,15 @@ Ducc: 我正在使用 devpipe:code-fixer 按 Fix Plan 修复代码。
 ```
 # 没有执行 init 就调用 discuss
 用户: /devpipe:discuss
-Ducc: .devpipe/context.json 不存在或不完整，请先执行 /devpipe:init 创建开发环境。
+Ducc: .devpipe/state/context.json 不存在或不完整，请先执行 /devpipe:init 创建开发环境。
 
 # 没有执行 discuss 就调用 design
 用户: /devpipe:design
-Ducc: .devpipe/prd.md 不存在，请先执行 /devpipe:discuss 讨论需求。
+Ducc: .devpipe/state/prd.md 不存在，请先执行 /devpipe:discuss 讨论需求。
 
 # 没有执行 design 就调用 coding
 用户: /devpipe:coding
-Ducc: .devpipe/coding-plan.md 不存在，请先执行 /devpipe:design 制定计划。
+Ducc: .devpipe/state/coding-plan.md 不存在，请先执行 /devpipe:design 制定计划。
 
 # 没有执行 coding 就调用 review-and-fix
 用户: /devpipe:review-and-fix
@@ -665,20 +665,20 @@ digraph devpipe_file_flow {
     subgraph cluster_init {
         label="/devpipe:init";
         style=dashed;
-        init [label="开发上下文\n.devpipe/context.json", shape=note];
+        init [label="开发上下文\n.devpipe/state/context.json", shape=note];
     }
 
     subgraph cluster_discuss {
         label="/devpipe:discuss";
         style=dashed;
-        spec [label="做什么\n.devpipe/prd.md", shape=note];
+        spec [label="做什么\n.devpipe/state/prd.md", shape=note];
     }
 
     subgraph cluster_design {
         label="/devpipe:design";
         style=dashed;
-        plan [label="怎么做\n.devpipe/coding-plan.md", shape=note];
-        progress [label="进度\n.devpipe/task-progress.md", shape=note];
+        plan [label="怎么做\n.devpipe/state/coding-plan.md", shape=note];
+        progress [label="进度\n.devpipe/state/task-progress.md", shape=note];
     }
 
     subgraph cluster_coding {

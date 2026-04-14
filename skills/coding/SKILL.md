@@ -1,11 +1,11 @@
 ---
 name: coding
-description: 按照开发计划执行编码、测试和提交。当用户想写代码、继续开发、恢复之前的开发进度时使用。即使用户说"coding 吧"、"继续开发"、"接着做"、"从上次继续"、"恢复开发"、"接着写代码"、"继续上次的任务"也应触发。前提：需要 .devpipe/coding-plan.md（由 devpipe:design 产出）。严格工作流顺序：devpipe:coding 只能在 devpipe:design 完成后调用。
+description: 按照开发计划执行编码、测试和提交。当用户想写代码、继续开发、恢复之前的开发进度时使用。即使用户说"coding 吧"、"继续开发"、"接着做"、"从上次继续"、"恢复开发"、"接着写代码"、"继续上次的任务"也应触发。前提：需要 .devpipe/state/coding-plan.md（由 devpipe:design 产出）。严格工作流顺序：devpipe:coding 只能在 devpipe:design 完成后调用。
 ---
 
 # 执行开发计划
 
-按 `.devpipe/coding-plan.md` 中的计划，逐任务执行编码和测试。所有开发类型（新功能、Bugfix、优化重构）统一走子任务模式。
+按 `.devpipe/state/coding-plan.md` 中的计划，逐任务执行编码和测试。所有开发类型（新功能、Bugfix、优化重构）统一走子任务模式。
 
 <HARD-GATE>
 ## 工作流顺序约束
@@ -14,10 +14,10 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 - **新功能**：`init → discuss → design → coding → review-and-fix → summarize`
 - **Bugfix / 优化重构**：`init → design → coding → review-and-fix → summarize`（跳过 discuss）
 
-- **本阶段（coding）的前置条件**：必须已执行 `devpipe:design`（`.devpipe/coding-plan.md` 存在且完整）
+- **本阶段（coding）的前置条件**：必须已执行 `devpipe:design`（`.devpipe/state/coding-plan.md` 存在且完整）
 - **本阶段（coding）的后继**：`devpipe:review-and-fix`（自动调用）
 - **禁止的行为**：
-  - 禁止在 `.devpipe/coding-plan.md` 不存在时开始编码
+  - 禁止在 `.devpipe/state/coding-plan.md` 不存在时开始编码
   - 禁止跳过 design 阶段直接调用本 skill
 </HARD-GATE>
 
@@ -39,13 +39,13 @@ bash plugins/devpipe/scripts/stage-gate.sh coding
 
 ### 1.2 校验 coding-plan.md
 
-读取 `.devpipe/coding-plan.md`，验证以下章节存在且有实质内容：
+读取 `.devpipe/state/coding-plan.md`，验证以下章节存在且有实质内容：
 - 基本信息、需求/问题概述、技术方案、涉及模块、子任务列表、子任务 Agent 执行方式、提交方式
-- 章节缺失 → **立即终止**："`.devpipe/coding-plan.md` 不完整，建议重新执行 `/devpipe:design`。"
+- 章节缺失 → **立即终止**："`.devpipe/state/coding-plan.md` 不完整，建议重新执行 `/devpipe:design`。"
 
 ### 1.3 进度恢复
 
-读取 `.devpipe/task-progress.md` 中的子任务进度表：
+读取 `.devpipe/state/task-progress.md` 中的子任务进度表：
 - 使用 `TaskCreate` 重建任务列表，将已完成的子任务标记为 completed
 - 找到标记为"当前"的子任务，从该任务继续执行
 - 向用户确认是否继续（上下文清空后直接继续执行，无需确认）
@@ -60,12 +60,12 @@ bash plugins/devpipe/scripts/stage-gate.sh coding
 
 #### 2.1 启动 Agent
 
-从 `.devpipe/coding-plan.md` 获取 Agent Prompt 构造方式，读取 `plugins/devpipe/skills/coding/references/coding-agent-prompt.md` 模板，按 coding-plan.md 中的替换规则构造 prompt，启动 general-purpose Agent：
+从 `.devpipe/state/coding-plan.md` 获取 Agent Prompt 构造方式，读取 `plugins/devpipe/skills/coding/references/coding-agent-prompt.md` 模板，按 coding-plan.md 中的替换规则构造 prompt，启动 general-purpose Agent：
 
 ```
 Agent 工具参数：
 - subagent_type: "general-purpose"
-- prompt: （按 .devpipe/coding-plan.md 中"Agent Prompt 必须包含以下要素"构造）
+- prompt: （按 .devpipe/state/coding-plan.md 中"Agent Prompt 必须包含以下要素"构造）
 - description: "开发子任务: <子任务简述>"
 ```
 
@@ -80,7 +80,7 @@ Agent 返回后检查：
 
 #### 2.3 更新进度
 
-子任务完成后更新 `.devpipe/task-progress.md`：
+子任务完成后更新 `.devpipe/state/task-progress.md`：
 - 将当前子任务标记为"已完成"
 - 将下一个子任务标记为"当前"
 - **如果 Agent 返回的结果中提到遇到问题并解决，将问题追加到"问题与解决方案记录"章节**
@@ -111,7 +111,7 @@ Skill 工具参数：
 
 ### 3.3 Git commit（不 push）
 
-按 [Git 命令参考](../../references/git_commands.md) 中的规则执行提交。GitHub Issue 编号和远程分支从 `.devpipe/coding-plan.md` 获取。
+按 [Git 命令参考](../../references/git_commands.md) 中的规则执行提交。GitHub Issue 编号和远程分支从 `.devpipe/state/coding-plan.md` 获取。
 
 ```bash
 git add <源代码和测试文件列表>
@@ -143,7 +143,7 @@ Skill 工具参数：
 
 ## 进度持久化
 
-`.devpipe/task-progress.md` 是**唯一的恢复依据**——不依赖对话历史，不依赖 SKILL.md 是否在上下文中。
+`.devpipe/state/task-progress.md` 是**唯一的恢复依据**——不依赖对话历史，不依赖 SKILL.md 是否在上下文中。
 
 ### 保存时机
 
@@ -156,7 +156,7 @@ Skill 工具参数：
 
 当新对话开始、上下文被清空、或对话从压缩上下文恢复时：
 
-1. 读取当前目录下的 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md`
+1. 读取当前目录下的 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`
 2. 如果存在，从 `coding-plan.md` 读取**子任务 Agent 执行方式**，从 `task-progress.md` 读取**子任务进度**
 3. 向用户确认是否继续（上下文清空后直接继续执行，无需确认）
 4. 使用 `TaskCreate` 重建任务列表，将已完成的子任务标记为 completed
@@ -175,9 +175,9 @@ Skill 工具参数：
 | Agent 超时或异常退出 | 检查 git status 查看已完成的文件改动，在主对话中继续剩余步骤 |
 | simplify 引入测试失败 | 修复问题后重新验证 |
 | 全量测试失败 | 定位失败模块，修复后重新提交 |
-| 用户中途取消 | 进度已保存在 `.devpipe/task-progress.md`，下次可恢复 |
-| 上下文被清空 | 读取 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md`，按其中的 Agent 执行方式继续 |
-| 新对话继续开发 | 读取 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md`，确认后从"当前"子任务继续 |
+| 用户中途取消 | 进度已保存在 `.devpipe/state/task-progress.md`，下次可恢复 |
+| 上下文被清空 | 读取 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`，按其中的 Agent 执行方式继续 |
+| 新对话继续开发 | 读取 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`，确认后从"当前"子任务继续 |
 
 ## 关键依赖
 

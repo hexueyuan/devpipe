@@ -3,7 +3,7 @@
 #
 # Usage: bash plugins/devpipe/scripts/stage-gate.sh <stage> [context-dir]
 #   stage:       discuss | design | coding | review-and-fix | summarize
-#   context-dir: path to .devpipe directory, default ".devpipe"
+#   context-dir: path to .devpipe/state directory, default ".devpipe/state"
 #
 # Exit codes:
 #   0 = passed, JSON summary on stdout
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 STAGE="${1:?用法: stage-gate.sh <stage> [context-dir]}"
-DEVPIPE_DIR="${2:-.devpipe}"
+DEVPIPE_DIR="${2:-.devpipe/state}"
 CONTEXT_FILE="${DEVPIPE_DIR}/context.json"
 
 # ------------------------------------------------------------------
@@ -44,7 +44,7 @@ require_jq() {
 # ------------------------------------------------------------------
 
 validate_context() {
-    [[ -f "$CONTEXT_FILE" ]] || die 1 "\`.devpipe/context.json\` 不存在，请先执行 \`/devpipe:init\` 创建开发环境。"
+    [[ -f "$CONTEXT_FILE" ]] || die 1 "\`.devpipe/state/context.json\` 不存在，请先执行 \`/devpipe:init\` 创建开发环境。"
 
     local missing=()
     for field in dev_type description remote_branch local_branch; do
@@ -54,7 +54,7 @@ validate_context() {
     done
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        die 1 "\`.devpipe/context.json\` 字段缺失: ${missing[*]}，请先执行 \`/devpipe:init\` 创建开发环境。"
+        die 1 "\`.devpipe/state/context.json\` 字段缺失: ${missing[*]}，请先执行 \`/devpipe:init\` 创建开发环境。"
     fi
 }
 
@@ -116,13 +116,13 @@ check_dependency_files() {
             # For 新功能: require prd.md (from discuss)
             # For Bugfix/优化重构: no prd.md required (coming directly from init)
             if [[ "$dev_type" == "新功能" ]]; then
-                [[ -f "${DEVPIPE_DIR}/prd.md" ]] || die 3 "\`.devpipe/prd.md\` 不存在，请先执行 \`/devpipe:discuss\` 讨论需求。"
+                [[ -f "${DEVPIPE_DIR}/prd.md" ]] || die 3 "\`.devpipe/state/prd.md\` 不存在，请先执行 \`/devpipe:discuss\` 讨论需求。"
             fi
             # For Bugfix/优化重构, no prd.md check - they come directly from init
             ;;
         coding)
             # All dev_types require coding-plan.md now
-            [[ -f "${DEVPIPE_DIR}/coding-plan.md" ]] || die 3 "\`.devpipe/coding-plan.md\` 不存在，请先执行 \`/devpipe:design\` 制定方案。"
+            [[ -f "${DEVPIPE_DIR}/coding-plan.md" ]] || die 3 "\`.devpipe/state/coding-plan.md\` 不存在，请先执行 \`/devpipe:design\` 制定方案。"
             ;;
         # review-and-fix, summarize have no file deps beyond context.json
     esac

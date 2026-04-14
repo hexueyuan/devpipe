@@ -37,7 +37,7 @@ STAGE_META = {
 }
 
 # 容器内 devflow 文件的路径（相对于 workspace_root）
-_CONTAINER_DEVFLOW_DIRS = [".devpipe"]
+_CONTAINER_DEVFLOW_DIRS = [".devpipe/state"]
 
 
 def _get_docs_base_dir(repo_path: str) -> str:
@@ -107,10 +107,10 @@ def _read_devflow_file(worktree_path: str, filename: str, context: Optional[dict
     读取 devflow 文件，优先本地，回退到容器内读取。
 
     查找顺序：
-    1. <worktree_path>/.devpipe/<filename>
+    1. <worktree_path>/.devpipe/state/<filename>
     2. <docs_path>/<filename>（Docker 挂载源目录，容器内产出的文件在这里）
     3. <worktree_path>/<filename>（归档目录场景）
-    4. docker exec <container_name> cat <workspace>/.devpipe/<filename>
+    4. docker exec <container_name> cat <workspace>/.devpipe/state/<filename>
     """
     # 1. 本地读取（尝试所有候选目录）
     for devflow_dir in _CONTAINER_DEVFLOW_DIRS:
@@ -368,7 +368,7 @@ def parse_dev_context(worktree_path: str) -> Optional[dict]:
     # 第一步：读取 worktree 本地 context 作为 bootstrap（获取 docs_path 等）
     bootstrap_context = None
     bootstrap_candidates = [
-        os.path.join(worktree_path, ".devpipe", "context.json"),
+        os.path.join(worktree_path, ".devpipe", "state", "context.json"),
         os.path.join(worktree_path, "context.json"),
     ]
     for context_path in bootstrap_candidates:
@@ -1008,7 +1008,7 @@ def get_all_worktrees(repo_path: str) -> list[WorktreeInfo]:
             fallback_ts = stage_timestamps_ctx.get("discuss", stage_timestamps_ctx.get("init", {})).get("started_at")
             created_at = _format_datetime(context["created_at"], fallback=fallback_ts)
         else:
-            context_file = os.path.join(path, ".devpipe", "context.json")
+            context_file = os.path.join(path, ".devpipe", "state", "context.json")
             created_at = get_file_created_time(context_file) if os.path.exists(context_file) else "-"
 
         # 获取或生成摘要

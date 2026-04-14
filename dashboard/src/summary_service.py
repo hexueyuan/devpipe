@@ -53,7 +53,7 @@ def ensure_summary(dev_context_path: str) -> str | None:
     """
     # 查找 context 文件
     context_candidates = [
-        os.path.join(dev_context_path, ".devpipe", "context.json"),
+        os.path.join(dev_context_path, ".devpipe", "state", "context.json"),
     ]
 
     # 追加：检查 .devpipe/ 内 symlink 指向的 docs 目录

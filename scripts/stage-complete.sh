@@ -4,7 +4,7 @@
 # Usage: bash plugins/devpipe/scripts/stage-complete.sh <stage> [--next-stage <name>] [context-dir]
 #   stage:        current stage being completed
 #   --next-stage: optional, preset the next stage (stage=<next>, stage_completed=false)
-#   context-dir:  path to .devpipe directory, default ".devpipe"
+#   context-dir:  path to .devpipe/state directory, default ".devpipe/state"
 #
 # Exit codes:
 #   0 = success, JSON confirmation on stdout
@@ -18,7 +18,7 @@ set -euo pipefail
 
 STAGE=""
 NEXT_STAGE=""
-DEVPIPE_DIR=".devpipe"
+DEVPIPE_DIR=".devpipe/state"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -66,7 +66,7 @@ iso_now() {
 # ------------------------------------------------------------------
 
 command -v jq >/dev/null 2>&1 || die 1 "错误: jq 未安装，请先安装 jq。"
-[[ -f "$CONTEXT_FILE" ]] || die 1 "\`.devpipe/context.json\` 不存在。"
+[[ -f "$CONTEXT_FILE" ]] || die 1 "\`.devpipe/state/context.json\` 不存在。"
 
 NOW="$(iso_now)"
 TMP="${CONTEXT_FILE}.tmp"

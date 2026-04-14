@@ -24,7 +24,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 - **Bugfix / 优化重构**：`init → design → coding → review-and-fix → summarize`（跳过 discuss）
 
 - **本阶段（discuss）的前置条件**：
-  - 必须已执行 `devpipe:init`（`.devpipe/context.json` 存在且完整）
+  - 必须已执行 `devpipe:init`（`.devpipe/state/context.json` 存在且完整）
   - `dev_type` 必须为「新功能」
 - **本阶段（discuss）的唯一后继**：`devpipe:design`
 - **禁止的行为**：
@@ -49,8 +49,8 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 
 **检查后续阶段状态（使用 Glob 工具，仅检查文件是否存在）：**
 
-- 如果 `.devpipe/prd.md` 已存在：询问用户是继续修改已有需求还是重新开始
-- 如果 `.devpipe/coding-plan.md` 已存在：说明已进入设计阶段，提示用户使用 `/devpipe:design` 继续
+- 如果 `.devpipe/state/prd.md` 已存在：询问用户是继续修改已有需求还是重新开始
+- 如果 `.devpipe/state/coding-plan.md` 已存在：说明已进入设计阶段，提示用户使用 `/devpipe:design` 继续
 
 **环境感知通过后，向用户确认：**
 > "检测到开发上下文：[功能描述]（新功能），GitHub Issue: #[编号]，远程分支: [分支名]。开始讨论需求。"
@@ -63,7 +63,7 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 
 ### 步骤 3：需求探索
 
-以 `.devpipe/context.json` 中的功能描述为起点展开讨论，不要求用户重复描述需求。
+以 `.devpipe/state/context.json` 中的功能描述为起点展开讨论，不要求用户重复描述需求。
 
 **卡片详情参考：**
 如果 `github_issue_body` 非空，在讨论过程中主动参考其中的补充说明和要求。
@@ -81,7 +81,7 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 
 ### 步骤 4：写需求文档
 
-需求讨论清楚后，将需求保存到 `.devpipe/prd.md`，格式如下：
+需求讨论清楚后，将需求保存到 `.devpipe/state/prd.md`，格式如下：
 
 ```markdown
 # 需求文档 (PRD)
@@ -125,7 +125,7 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 <HARD-GATE>
 需求文档写入后，**必须明确询问用户是否对需求文档没有问题**，**必须等到用户明确表示确认后才能进入下一阶段**。
 
-> "需求文档已保存到 `.devpipe/prd.md`。请查看确认，如有修改意见可以继续讨论。确认无误后我将进入方案设计阶段。"
+> "需求文档已保存到 `.devpipe/state/prd.md`。请查看确认，如有修改意见可以继续讨论。确认无误后我将进入方案设计阶段。"
 
 禁止的行为：
 - 不要自行判断"需求已经足够清晰"然后直接进入下一阶段
@@ -134,7 +134,7 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 必须的行为：
 - 等待用户回复
 - 只有用户明确给出肯定回复后，才进入步骤 6
-- 如果用户提出修改意见，使用 Edit 工具修改 `.devpipe/prd.md`，然后再次请求确认
+- 如果用户提出修改意见，使用 Edit 工具修改 `.devpipe/state/prd.md`，然后再次请求确认
 </HARD-GATE>
 
 ### 步骤 6：调用 design 阶段

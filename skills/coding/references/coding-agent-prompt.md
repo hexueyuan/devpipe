@@ -1,6 +1,6 @@
 # Coding Agent Prompt 模板
 
-本文件定义了 `devpipe:coding` 阶段派遣子 Agent 执行子任务时的标准 Prompt 模板。`devpipe:design` 在生成 `.devpipe/coding-plan.md` 时引用此模板路径，`devpipe:coding` 在执行时读取此模板并替换占位符。
+本文件定义了 `devpipe:coding` 阶段派遣子 Agent 执行子任务时的标准 Prompt 模板。`devpipe:design` 在生成 `.devpipe/state/coding-plan.md` 时引用此模板路径，`devpipe:coding` 在执行时读取此模板并替换占位符。
 
 ---
 
@@ -8,10 +8,10 @@
 
 | 占位符 | 说明 | 来源 |
 |--------|------|------|
-| `[WORKING_DIRECTORY]` | 工作目录绝对路径 | `.devpipe/coding-plan.md` 基本信息 |
+| `[WORKING_DIRECTORY]` | 工作目录绝对路径 | `.devpipe/state/coding-plan.md` 基本信息 |
 | `[TASK_DESCRIPTION]` | 子任务的完整描述 | TaskGet 获取 |
-| `[MODULE_NAME]` | 子任务所属模块名称 | `.devpipe/coding-plan.md` 子任务列表 |
-| `[STANDARDS_DOCS]` | 适用的模块开发规范文档路径列表，每行一个 | `.devpipe/coding-plan.md` 适用的模块开发规范 |
+| `[MODULE_NAME]` | 子任务所属模块名称 | `.devpipe/state/coding-plan.md` 子任务列表 |
+| `[STANDARDS_DOCS]` | 适用的模块开发规范文档路径列表，每行一个 | `.devpipe/state/coding-plan.md` 适用的模块开发规范 |
 
 ---
 
@@ -74,7 +74,7 @@ IMPORTANT: 在以下目录工作: [WORKING_DIRECTORY]
 
 ### design 阶段
 
-在 `.devpipe/coding-plan.md` 的"子任务 Agent 执行方式"章节中，引用此模板：
+在 `.devpipe/state/coding-plan.md` 的"子任务 Agent 执行方式"章节中，引用此模板：
 
 ```markdown
 ## 子任务 Agent 执行方式

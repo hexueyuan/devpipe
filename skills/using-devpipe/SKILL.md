@@ -29,9 +29,9 @@ description: 每个对话开始时使用 - 建立如何查找和使用 devpipe s
 
 | Skill | 触发场景 | 产出 |
 |-------|----------|------|
-| `devpipe:init` | 开始开发、创建分支、初始化环境、"帮我开个环境"、"准备开发" | `.devpipe/context.json` |
-| `devpipe:discuss` | 讨论需求（仅新功能）、"聊聊需求"、"我想做一个新功能" | `.devpipe/prd.md` |
-| `devpipe:design` | 拆分任务、制定计划、分析 Bug、设计重构方案、"怎么实现"、"写个计划" | `.devpipe/coding-plan.md + task-progress.md` |
+| `devpipe:init` | 开始开发、创建分支、初始化环境、"帮我开个环境"、"准备开发" | `.devpipe/state/context.json` |
+| `devpipe:discuss` | 讨论需求（仅新功能）、"聊聊需求"、"我想做一个新功能" | `.devpipe/state/prd.md` |
+| `devpipe:design` | 拆分任务、制定计划、分析 Bug、设计重构方案、"怎么实现"、"写个计划" | `.devpipe/state/coding-plan.md + task-progress.md` |
 | `devpipe:coding` | 写代码、继续开发、"接着做"、"从上次继续" | 代码 commit（不 push） |
 | `devpipe:review-and-fix` | 评审代码、推送代码、"review"、"push"、"自检" | 代码推送到 GitHub + PR |
 | `devpipe:summarize` | 总结归档、"summarize"、"代码已合入"、"归档" | `docs/` 下迭代文档 |
@@ -90,7 +90,7 @@ digraph devpipe_decision {
 
     start [label="收到用户消息", shape=ellipse, style="filled", fillcolor="#E8E8E8"];
 
-    check_workflow [label="用户是否在 devpipe 工作流中？\n（检查 .devpipe/context.json /\n.devpipe/prd.md / .devpipe/coding-plan.md）", shape=diamond];
+    check_workflow [label="用户是否在 devpipe 工作流中？\n（检查 .devpipe/state/context.json /\n.devpipe/state/prd.md / .devpipe/state/coding-plan.md）", shape=diamond];
 
     determine_stage [label="根据进度文件确定当前阶段\n调用对应的 devpipe skill"];
 
@@ -112,7 +112,7 @@ digraph devpipe_decision {
 
 ## 自动阶段检测
 
-当检测到 `.devpipe/context.json` 存在时，读取其中的 `stage`、`stage_completed` 和 `dev_type` 字段确定当前阶段和完成状态：
+当检测到 `.devpipe/state/context.json` 存在时，读取其中的 `stage`、`stage_completed` 和 `dev_type` 字段确定当前阶段和完成状态：
 
 ### 二维路由表（stage + stage_completed）
 
@@ -141,8 +141,8 @@ digraph devpipe_decision {
 
 | 状态 | 调用 |
 |------|------|
-| 只有 `.devpipe/context.json`，`dev_type` 为新功能 | `devpipe:discuss` |
-| 只有 `.devpipe/context.json`，`dev_type` 为 Bugfix/优化重构 | `devpipe:design` |
+| 只有 `.devpipe/state/context.json`，`dev_type` 为新功能 | `devpipe:discuss` |
+| 只有 `.devpipe/state/context.json`，`dev_type` 为 Bugfix/优化重构 | `devpipe:design` |
 | 有 `context.json` + `prd.md` | `devpipe:design` |
 | 有 `context.json` + `coding-plan.md` | `devpipe:coding` |
 

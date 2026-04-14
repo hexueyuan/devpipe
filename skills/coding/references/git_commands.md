@@ -35,7 +35,7 @@ GitHub 惯例使用多提交 PR 工作流，每个有意义的改动是一个独
 
 **重要：每个 git 命令必须作为独立的 Bash 调用执行，不要用 `&&` 链接。** 链接后的命令无法匹配权限白名单，会导致执行暂停。
 
-**禁止提交 devpipe 状态文件**：`.devpipe/` 目录已加入 `.gitignore`，`git add` 时只添加源代码和测试文件，**不要使用 `git add .`、`git add -A` 或 `git reset`**。
+**禁止提交 devpipe 状态文件**：`.devpipe/state/` 目录已加入 `.gitignore`，`git add` 时只添加源代码和测试文件，**不要使用 `git add .`、`git add -A` 或 `git reset`**。
 
 **Commit message 格式要求**：必须是**单行纯文本**，格式为 `#<Issue编号> Short English description.`。禁止使用 HEREDOC、多行消息、Co-Authored-By、日期、作者等额外信息。
 

@@ -48,5 +48,5 @@
 Agent 工具参数：
 - subagent_type: "general-purpose"
 - description: "审查设计文档"
-- prompt: （将上方模板中的 [SPEC_FILE_PATH] 替换为实际的 .devpipe/prd.md 路径）
+- prompt: （将上方模板中的 [SPEC_FILE_PATH] 替换为实际的 .devpipe/state/prd.md 路径）
 ```

@@ -15,7 +15,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 - **Bugfix / 优化重构**：`init → design → coding → review-and-fix → summarize`（跳过 discuss）
 
 - **本阶段（design）的入口**：
-  - 新功能：从 `devpipe:discuss` 进入，读取 `.devpipe/prd.md` 作为需求输入
+  - 新功能：从 `devpipe:discuss` 进入，读取 `.devpipe/state/prd.md` 作为需求输入
   - Bugfix/优化重构：从 `devpipe:init` 直接进入，以 `context.json` 的 github_issue_body 和 description 为输入
 - **本阶段（design）的唯一后继**：`devpipe:coding`
 - **禁止的行为**：
@@ -42,7 +42,7 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 **检查后续阶段状态（使用 Glob 工具）：**
 
-- 如果 `.devpipe/coding-plan.md` 已存在：询问用户是要重新制定方案还是直接使用 `/devpipe:coding` 继续执行
+- 如果 `.devpipe/state/coding-plan.md` 已存在：询问用户是要重新制定方案还是直接使用 `/devpipe:coding` 继续执行
 
 ### 步骤 2：需求/问题理解
 
@@ -50,7 +50,7 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 #### 2A. 新功能（从 discuss 进入）
 
-读取 `.devpipe/prd.md`，提取：
+读取 `.devpipe/state/prd.md`，提取：
 - 功能描述
 - 功能边界
 - 验收标准
@@ -59,7 +59,7 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 #### 2B. Bugfix / 优化重构（从 init 直接进入）
 
-从 `.devpipe/context.json` 读取 `description` 和 `github_issue_body`，然后与用户讨论补充以下信息：
+从 `.devpipe/state/context.json` 读取 `description` 和 `github_issue_body`，然后与用户讨论补充以下信息：
 
 **Bugfix 场景：**
 - 问题现象：用户看到什么错误？
@@ -118,11 +118,11 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 - 涉及文件: <预计涉及的文件路径>
 ```
 
-### 步骤 5：写入 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md`
+### 步骤 5：写入 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`
 
 方案设计和任务拆分完成后，将计划拆分为两个文件：
 
-#### 5A. 写入 `.devpipe/coding-plan.md`（开发计划，不含进度跟踪）
+#### 5A. 写入 `.devpipe/state/coding-plan.md`（开发计划，不含进度跟踪）
 
 ```markdown
 # 开发计划
@@ -136,7 +136,7 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 - 本地分支: <从 context.json 获取>
 - 工作目录: <pwd 的绝对路径>
 - 创建时间: <YYYY-MM-DD>
-- 需求文档: <.devpipe/prd.md 或 "无（从 Issue 详情获取）">
+- 需求文档: <.devpipe/state/prd.md 或 "无（从 Issue 详情获取）">
 
 ## 需求/问题概述
 
@@ -216,14 +216,14 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 3. git add → git commit -m "#<Issue编号> English description."（不 push）
 4. 自动进入 review-and-fix 阶段
 
-要点：每个 git 命令独立执行（不用 `&&`），只 add 具体的源代码和测试文件，不要添加 devpipe 状态文件（.devpipe/coding-plan.md、.devpipe/prd.md、.devpipe/context.json）。
+要点：每个 git 命令独立执行（不用 `&&`），只 add 具体的源代码和测试文件，不要添加 devpipe 状态文件（.devpipe/state/coding-plan.md、.devpipe/state/prd.md、.devpipe/state/context.json）。
 - 首次提交: git add → git commit -m "#<Issue编号> English description."
 - review 修复后（review-and-fix 阶段）: git add → git commit -m "#<Issue编号> Fix review comments."
 - 推送（review-and-fix 阶段）: git push origin HEAD:<本地分支>
 - 创建 PR（review-and-fix 阶段）: gh pr create --base <远程分支>
 ```
 
-#### 5B. 写入 `.devpipe/task-progress.md`（子任务进度，由 coding skill 更新）
+#### 5B. 写入 `.devpipe/state/task-progress.md`（子任务进度，由 coding skill 更新）
 
 ```markdown
 # 子任务进度
@@ -253,10 +253,10 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 ### 步骤 6：计划审查循环
 
-`.devpipe/coding-plan.md` 写入后，派遣 plan-reviewer 子 agent 审查：
+`.devpipe/state/coding-plan.md` 写入后，派遣 plan-reviewer 子 agent 审查：
 
-1. 使用 Agent 工具（subagent_type: "general-purpose"），按 `plan-reviewer-prompt.md` 中的模板构造 prompt，传入 `.devpipe/coding-plan.md` 的文件路径
-2. 如果审查发现问题：使用 Edit 工具修改 `.devpipe/coding-plan.md`，然后重新派遣审查
+1. 使用 Agent 工具（subagent_type: "general-purpose"），按 `plan-reviewer-prompt.md` 中的模板构造 prompt，传入 `.devpipe/state/coding-plan.md` 的文件路径
+2. 如果审查发现问题：使用 Edit 工具修改 `.devpipe/state/coding-plan.md`，然后重新派遣审查
 3. 如果审查通过：进入用户确认
 
 **审查次数限制（根据 dev_type）：**
@@ -277,20 +277,20 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 
 必须的行为：
 - 向用户发送确认请求：
-  > "开发计划已保存到 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md` 并通过审查。请查看确认，如有调整意见可以继续讨论。确认无误后我将开始开发。"
+  > "开发计划已保存到 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md` 并通过审查。请查看确认，如有调整意见可以继续讨论。确认无误后我将开始开发。"
 - 等待用户回复
 - 只有用户明确给出肯定回复后，才进入步骤 8
-- 如果用户提出修改意见，使用 Edit 工具修改 `.devpipe/coding-plan.md`，然后再次请求确认
+- 如果用户提出修改意见，使用 Edit 工具修改 `.devpipe/state/coding-plan.md`，然后再次请求确认
 </HARD-GATE>
 
 ### 步骤 8：创建任务列表并调用 devpipe:coding
 
-使用 `TaskCreate` 创建任务列表。每个子任务的 `description` 必须**从 `.devpipe/coding-plan.md` 的「子任务详细说明」章节中复制对应子任务的完整内容**，包含：
+使用 `TaskCreate` 创建任务列表。每个子任务的 `description` 必须**从 `.devpipe/state/coding-plan.md` 的「子任务详细说明」章节中复制对应子任务的完整内容**，包含：
 - 目标
 - 实现要点
 - 涉及文件
 - 验收标准
-- 末尾固定追加一行：`执行方式：读取 .devpipe/coding-plan.md 中的"子任务 Agent 执行方式"，使用 Agent 工具执行。`
+- 末尾固定追加一行：`执行方式：读取 .devpipe/state/coding-plan.md 中的"子任务 Agent 执行方式"，使用 Agent 工具执行。`
 
 > 这行文字确保上下文清空后，模型看到任务描述就知道去读进度文件获取执行方式。
 
@@ -303,7 +303,7 @@ bash plugins/devpipe/scripts/stage-complete.sh design
 ```
 
 2. 宣告并调用 devpipe:coding：
-   > "开发计划已制定完成，保存到 `.devpipe/coding-plan.md` 和 `.devpipe/task-progress.md`。接下来使用 devpipe:coding 执行开发。"
+   > "开发计划已制定完成，保存到 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`。接下来使用 devpipe:coding 执行开发。"
 
 使用 `Skill` 工具调用 `devpipe:coding`：
 ```

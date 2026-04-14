@@ -780,6 +780,7 @@ def _run_init_script(task: CreateTask):
         mode=task.mode,
         devpipe_root=DEVPIPE_ROOT,
         issue_num=task.github_issue or "",
+        repo_root=REPO_ROOT,
     )
 
     runner = InitEnvRunner(params, logger=logger)
@@ -799,12 +800,14 @@ def _write_context_json(task: CreateTask):
     Docker 容器将 docs_path bind mount 到 .devpipe，所以必须写入 docs_path
     才能让容器内的 stage-gate.sh 找到 context.json。
     """
+    # worktree_path 始终计算（用于 context.json）
+    worktree_path = os.path.join(WORKTREE_DIR, task.branch_name.replace("/", "-"))
+
     # 优先使用 docs_path（Docker 挂载源），回退到 worktree/.devpipe/
     if task.docs_path and os.path.isdir(task.docs_path):
         devflow_dir = task.docs_path
     else:
-        worktree_path = os.path.join(WORKTREE_DIR, task.branch_name.replace("/", "-"))
-        devflow_dir = os.path.join(worktree_path, ".devpipe")
+        devflow_dir = os.path.join(worktree_path, ".devpipe", "state")
 
     if not os.path.exists(devflow_dir):
         os.makedirs(devflow_dir, exist_ok=True)

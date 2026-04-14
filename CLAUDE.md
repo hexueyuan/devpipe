@@ -15,7 +15,7 @@ Bugfix/重构工作流跳过 `discuss` 阶段。
 - **调度器：** `skills/using-devpipe/SKILL.md` — 将用户请求路由到对应的阶段 skill
 - **会话钩子：** `hooks/session-start` 在每次会话启动时注入调度器 skill
 - **阶段门控脚本：** `scripts/stage-gate.sh`（校验前置条件）和 `scripts/stage-complete.sh`（标记完成并记录时间戳）控制阶段流转
-- **状态持久化：** `.devpipe/context.json` 记录 `stage`、`stage_completed`、`dev_type`、分支信息和时间戳。其他产物：`prd.md`、`coding-plan.md`、`task-progress.md`、`review-status.md`、`summary.md`
+- **状态持久化：** `.devpipe/state/context.json` 记录 `stage`、`stage_completed`、`dev_type`、分支信息和时间戳。其他产物：`prd.md`、`coding-plan.md`、`task-progress.md`、`review-status.md`、`summary.md`
 - **子 Agent 模式：** Skill 通过 Markdown 提示词模板编排子 Agent（如 `coding-agent-prompt.md`、`reviewer-agent-prompt.md`、`fixer-agent-prompt.md`），使用 `[PLACEHOLDER]` 语法做变量替换
 - **数据交换：** `code-reviewer` 和 `code-fixer` 通过结构化的 Fix Plan JSON Schema 通信（定义在 `references/fix-plan-schema.md`）
 - **Dashboard：** Flask Web 应用（`dashboard/src/app.py`），端口 5001/5051，用于监控 worktree 开发分支和工作流阶段状态，通过 `dashboard/sbin/dashboard-ctl.sh` 管理生命周期
@@ -43,7 +43,7 @@ docker build -t devpipe/devspace:latest resources/
 - **每条 git 命令必须作为独立的 Bash 调用执行**，禁止用 `&&` 链接
 - **Commit message 格式：** `#<Issue编号> Short English description.`（单行、英文、句末加句号）
 - **分支命名：** `feature/<name>`、`fix/<name>`、`refactor/<name>` — kebab-case，3-4 个词
-- **禁止提交 `.devpipe/`** 状态文件，禁止使用 `git add .` 或 `git add -A`
+- **禁止提交 `.devpipe/state/`** 状态文件，禁止使用 `git add .` 或 `git add -A`
 - 多提交 PR 工作流：每个有意义的改动是一个独立 commit
 
 ## 关键约定

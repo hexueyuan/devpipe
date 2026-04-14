@@ -187,7 +187,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init_env.py <local-branch-name
 - 构建 Docker 镜像（查找项目内 Dockerfile 或使用通用镜像）
 - 创建 Docker 容器：
   - 挂载仓库 worktree 代码
-  - 挂载 `.devpipe` 目录
+  - 挂载 `.devpipe/state` 目录
   - 挂载 SSH 密钥和 gh CLI 配置
   - Docker named volume 挂载到 `.git`（独立 git 数据库）
   - 初始化容器内 git 环境（checkout 到开发分支）
@@ -220,9 +220,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init_env.py <local-branch-name
 
 ### 步骤 6：写入开发上下文
 
-将收集的信息写入 worktree 根目录的 `.devpipe/context.json`，供后续 skill 自动读取，避免用户重复输入：
+将收集的信息写入 worktree 根目录的 `.devpipe/state/context.json`，供后续 skill 自动读取，避免用户重复输入：
 
-`.devpipe/` 目录已由 `init-env.sh` 脚本自动创建，直接写入配置文件：
+`.devpipe/state/` 目录已由 `init-env.sh` 脚本自动创建，直接写入配置文件：
 
 ```json
 {
@@ -253,7 +253,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init_env.py <local-branch-name
 - `github_repo`：通过 `gh repo view --json nameWithOwner -q .nameWithOwner` 获取
 - `docs_path`：从 init-env.sh 输出的 `Devpipe Docs:` 行捕获，为 `.devpipe/docs/YYYYMMDD-issueNum-branchName/` 的绝对路径
 
-直接使用 `Write` 工具将文件写入 `<worktree-path>/.devpipe/context.json`（目录已由 init-env.sh 创建，无需再调 mkdir）。
+直接使用 `Write` 工具将文件写入 `<worktree-path>/.devpipe/state/context.json`（目录已由 init-env.sh 创建，无需再调 mkdir）。
 
 ### 步骤 7：输出结果
 

@@ -9,8 +9,8 @@
 ```
 你是计划文档审查员。验证此实施计划是否完整且可直接执行。
 
-**待审查计划：** [PROGRESS_FILE_PATH]（即 .devpipe/coding-plan.md）
-**设计文档参考：** [SPEC_FILE_PATH]（即 .devpipe/prd.md）
+**待审查计划：** [PROGRESS_FILE_PATH]（即 .devpipe/state/coding-plan.md）
+**设计文档参考：** [SPEC_FILE_PATH]（即 .devpipe/state/prd.md）
 
 请读取这两个文件，对照设计文档审查计划。
 
