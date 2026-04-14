@@ -40,6 +40,42 @@ STAGE_META = {
 _CONTAINER_DEVFLOW_DIRS = [".devpipe"]
 
 
+def _get_docs_base_dir(repo_path: str) -> str:
+    """
+    从 devpipe.yml 读取 docs_dir 配置，返回文档存放的基础目录（绝对路径）。
+
+    Args:
+        repo_path: git 仓库路径
+
+    Returns:
+        绝对路径，默认为 {repo_path}/.devpipe/docs
+    """
+    default_dir = os.path.join(repo_path, ".devpipe", "docs")
+    yml_path = os.path.join(repo_path, ".devpipe", "devpipe.yml")
+
+    if not os.path.isfile(yml_path):
+        return default_dir
+
+    try:
+        with open(yml_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("docs_dir:"):
+                    value = line[len("docs_dir:"):].strip()
+                    # 去掉行内注释
+                    if "#" in value:
+                        value = value[:value.index("#")].strip()
+                    if value:
+                        # 判断是否为绝对路径
+                        if os.path.isabs(value):
+                            return value
+                        return os.path.join(repo_path, value)
+    except IOError:
+        pass
+
+    return default_dir
+
+
 def _docker_cat(container_name: str, file_path: str) -> Optional[str]:
     """通过 docker exec 读取容器内文件内容"""
     try:
@@ -855,7 +891,7 @@ def get_timeline_groups(context: Optional[dict], current_stage: str, dev_type: s
 
 def get_archived_devspaces(repo_path: str) -> list[WorktreeInfo]:
     """
-    扫描 .devpipe/docs/ 目录，获取已归档（已清理）的开发环境信息。
+    扫描 docs 目录，获取已归档（已清理）的开发环境信息。
 
     Args:
         repo_path: git 仓库路径
@@ -863,7 +899,7 @@ def get_archived_devspaces(repo_path: str) -> list[WorktreeInfo]:
     Returns:
         WorktreeInfo 列表（标记为归档状态）
     """
-    docs_dir = os.path.join(repo_path, ".devpipe", "docs")
+    docs_dir = _get_docs_base_dir(repo_path)
     if not os.path.isdir(docs_dir):
         return []
 

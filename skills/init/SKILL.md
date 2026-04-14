@@ -161,10 +161,10 @@ gh issue view <number> --json title,body,labels,state,url
 
 ### 步骤 4：执行初始化脚本
 
-运行 `scripts/init-env.sh` 完成环境创建：
+运行 `scripts/init_env.py` 完成环境创建：
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init-env.sh <local-branch-name> <base-branch> <mode> "${CLAUDE_PLUGIN_ROOT}" "<issue-number>"
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init_env.py <local-branch-name> <base-branch> <mode> "${CLAUDE_PLUGIN_ROOT}" "<issue-number>"
 ```
 
 **⚠️ 重要：必须使用相对路径，且从仓库根目录运行**
@@ -213,7 +213,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/init-env.sh <local-branch-name> <
 如果编译失败，输出错误信息并提示用户排查问题。提供清理指引：
 ```
 编译失败，可执行以下命令清理环境后重试：
-  bash skills/init/scripts/cleanup-env.sh <local-branch-name>
+  python3 skills/init/scripts/cleanup_env.py <local-branch-name>
 ```
 
 > **注意**：同样使用相对路径，不要使用全路径。
@@ -290,7 +290,7 @@ GitHub Issue: #<编号> 或 "提交时填写"
 如需删除开发环境，执行清理脚本：
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/cleanup-env.sh <branch-name>
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/init/scripts/cleanup_env.py <branch-name>
 ```
 
 > **注意**：必须使用相对路径，从仓库根目录运行，不要使用全路径。

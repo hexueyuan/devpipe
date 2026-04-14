@@ -15,6 +15,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import threading
 import uuid
 from dataclasses import dataclass, field
@@ -28,6 +29,14 @@ try:
     from .config import DEVPIPE_ROOT, REPO_ROOT, WORKTREE_DIR, BRANCH_PREFIXES
 except ImportError:
     from config import DEVPIPE_ROOT, REPO_ROOT, WORKTREE_DIR, BRANCH_PREFIXES
+
+# 添加 devpipelib 路径
+_DEVPIPELIB_PATH = os.path.join(DEVPIPE_ROOT, "skills", "init", "scripts")
+if _DEVPIPELIB_PATH not in sys.path:
+    sys.path.insert(0, _DEVPIPELIB_PATH)
+
+from devpipelib.init_env import InitEnvParams, InitEnvRunner, InitEnvResult
+from devpipelib.cleanup_env import CleanupParams, CleanupRunner
 
 
 # LLM 客户端（延迟初始化）
@@ -76,16 +85,6 @@ _tasks_lock = threading.Lock()
 
 # 任务过期时间（秒）
 TASK_EXPIRE_SECONDS = 3600
-
-# 脚本路径
-INIT_ENV_SCRIPT = os.path.join(
-    DEVPIPE_ROOT,
-    "skills/init/scripts/init-env.sh"
-)
-CLEANUP_ENV_SCRIPT = os.path.join(
-    DEVPIPE_ROOT,
-    "skills/init/scripts/cleanup-env.sh"
-)
 
 
 # 卡片类型 → 开发类型映射
@@ -740,103 +739,56 @@ class CreateError(Exception):
 
 def _run_init_script(task: CreateTask):
     """
-    执行 init-env.sh 脚本
+    使用 InitEnvRunner 执行初始化
 
-    通过解析脚本输出来更新进度
+    通过 on_stage 回调更新进度
     """
-    if not os.path.exists(INIT_ENV_SCRIPT):
-        raise CreateError("init-env.sh 脚本不存在", INIT_ENV_SCRIPT)
-
-    # 构建命令
-    cmd = ["bash", INIT_ENV_SCRIPT, task.branch_name, task.base_branch, task.mode, DEVPIPE_ROOT, task.github_issue or ""]
-
-    task.logs.append(f"执行: {' '.join(cmd)}")
-
-    # 脚本开始即认为前置检查开始
-    _update_stage(task, "前置检查", "running")
-    task.progress = _get_progress_by_stage("前置检查")
-
-    # 用于捕获脚本输出的 docs 路径
-    docs_path = ""
-
-    # 进度关键词映射
-    progress_keywords = {
-        "同步远程分支": "分支同步",
-        "基于本地分支": "分支同步",
-        "远程代码同步完成": "分支同步",
-        "本地分支验证完成": "分支同步",
+    # 阶段名映射（InitEnvRunner → Dashboard 阶段名）
+    stage_map = {
+        "前置检查": "前置检查",
+        "冲突检测": "前置检查",
+        "工作区检测": "前置检查",
+        "分支同步": "分支同步",
         "创建 Worktree": "创建 Worktree",
-        "Worktree 创建完成": "创建 Worktree",
-        "检查基础镜像": "构建镜像",
-        "使用镜像": "构建镜像",
-        "创建 Docker 容器": "创建容器",
-        "Docker 容器创建完成": "创建容器",
-        "初始化容器内 Git": "初始化 Git",
-        "Git 环境初始化完成": "初始化 Git",
-        "初始化 Claude 配置": "初始化配置",
-        "Claude 配置已初始化": "初始化配置",
-        "创建 Tmux Session": "创建 Tmux",
-        "Tmux Session 创建完成": "创建 Tmux",
-        "开发环境创建完成": "创建 Tmux",
+        "构建镜像": "构建镜像",
+        "创建容器": "创建容器",
+        "初始化 Git": "初始化 Git",
+        "初始化 gh": "初始化 Git",
+        "初始化配置": "初始化配置",
+        "创建 Tmux": "创建 Tmux",
     }
 
-    # 确保环境变量正确传递
-    env = os.environ.copy()
-    if "HOME" not in env:
-        env["HOME"] = os.path.expanduser("~")
+    current_stage = [None]  # 用列表以便在闭包中修改
 
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        cwd=REPO_ROOT,
-        bufsize=1,
-        env=env
+    def on_stage(stage_name: str, status: str):
+        mapped = stage_map.get(stage_name, stage_name)
+        if status == "running":
+            if current_stage[0] and current_stage[0] != mapped:
+                _update_stage(task, current_stage[0], "done")
+            _update_stage(task, mapped, "running")
+            task.progress = _get_progress_by_stage(mapped)
+            current_stage[0] = mapped
+        elif status == "done" and current_stage[0] == mapped:
+            _update_stage(task, mapped, "done")
+
+    def logger(msg: str):
+        task.logs.append(msg)
+
+    params = InitEnvParams(
+        local_branch=task.branch_name,
+        base_branch=task.base_branch,
+        mode=task.mode,
+        devpipe_root=DEVPIPE_ROOT,
+        issue_num=task.github_issue or "",
     )
 
-    current_stage = "前置检查"  # 脚本开始即进入前置检查阶段
+    runner = InitEnvRunner(params, logger=logger)
 
-    for line in iter(process.stdout.readline, ''):
-        line = line.rstrip()
-        if not line:
-            continue
-
-        task.logs.append(line)
-
-        # 捕获 docs 路径
-        if line.startswith("Devpipe Docs:"):
-            docs_path = line.split(":", 1)[1].strip()
-
-        # 检查是否是错误
-        if line.startswith("ERROR:"):
-            process.terminate()
-            raise CreateError(line, "\n".join(task.logs[-20:]))
-
-        # 更新进度
-        for keyword, stage_name in progress_keywords.items():
-            if keyword in line:
-                if current_stage and current_stage != stage_name:
-                    _update_stage(task, current_stage, "done")
-                _update_stage(task, stage_name, "running")
-                task.progress = _get_progress_by_stage(stage_name)
-                current_stage = stage_name
-                break
-
-    process.wait()
-
-    if process.returncode != 0:
-        raise CreateError(
-            f"init-env.sh 执行失败 (exit code: {process.returncode})",
-            "\n".join(task.logs[-20:])
-        )
-
-    # 标记最后一个阶段完成
-    if current_stage:
-        _update_stage(task, current_stage, "done")
-
-    # 保存 docs 路径到 task
-    task.docs_path = docs_path
+    try:
+        result = runner.run_steps(on_stage=on_stage)
+        task.docs_path = result.docs_path
+    except Exception as e:
+        raise CreateError(str(e), "\n".join(task.logs[-20:]))
 
 
 def _write_context_json(task: CreateTask):
@@ -894,29 +846,18 @@ def _write_context_json(task: CreateTask):
 
 def _run_cleanup(task: CreateTask):
     """
-    执行清理脚本回滚资源
+    使用 CleanupRunner 执行回滚资源
     """
     if not task.branch_name:
         return
 
-    if not os.path.exists(CLEANUP_ENV_SCRIPT):
-        task.logs.append(f"警告: 清理脚本不存在: {CLEANUP_ENV_SCRIPT}")
-        return
+    def logger(msg: str):
+        task.logs.append(f"[cleanup] {msg}")
 
     try:
-        result = subprocess.run(
-            ["bash", CLEANUP_ENV_SCRIPT, task.branch_name],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
-        if result.stdout:
-            for line in result.stdout.strip().split("\n"):
-                task.logs.append(f"[cleanup] {line}")
-        if result.stderr:
-            for line in result.stderr.strip().split("\n"):
-                task.logs.append(f"[cleanup error] {line}")
+        params = CleanupParams(branch_name=task.branch_name)
+        runner = CleanupRunner(params, logger=logger)
+        runner.run_steps()
     except Exception as e:
         task.logs.append(f"[cleanup error] {e}")
 
