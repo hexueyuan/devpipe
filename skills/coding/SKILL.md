@@ -1,6 +1,6 @@
 ---
 name: coding
-description: 按照开发计划执行编码、测试和提交。当用户想写代码、继续开发、恢复之前的开发进度时使用。即使用户说"coding 吧"、"继续开发"、"接着做"、"从上次继续"、"恢复开发"、"接着写代码"、"继续上次的任务"也应触发。前提：需要 .devpipe/state/coding-plan.md（由 devpipe:design 产出）。严格工作流顺序：devpipe:coding 只能在 devpipe:design 完成后调用。
+description: 按照开发计划执行编码、测试和提交。当用户想写代码、继续开发、恢复之前的开发进度时使用。即使用户说"coding 吧"、"继续开发"、"接着做"、"从上次继续"、"恢复开发"、"接着写代码"、"继续上次的任务"、"开始编码"、"执行计划"也应触发。前提：需要 .devpipe/state/coding-plan.md（由 devpipe:design 产出）。严格工作流顺序：devpipe:coding 只能在 devpipe:design 完成后调用。
 ---
 
 # 执行开发计划
@@ -32,7 +32,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 ### 1.1 执行阶段准入检查
 
 ```bash
-bash plugins/devpipe/scripts/stage-gate.sh coding
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh coding
 ```
 
 脚本自动完成 context.json 校验（必需字段非空）、依赖文件检查（coding-plan.md 必须存在）和阶段标记。
@@ -128,7 +128,7 @@ git commit -m "#<Issue编号> Short English description."
 1. 标记阶段完成并预设下一阶段：
 
 ```bash
-bash plugins/devpipe/scripts/stage-complete.sh coding --next-stage review-and-fix
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh coding --next-stage review-and-fix
 ```
 
 2. 宣告并调用 devpipe:review-and-fix：

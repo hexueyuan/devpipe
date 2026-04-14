@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # stage-gate.sh — devpipe stage entry gate check + stage start marker
 #
-# Usage: bash plugins/devpipe/scripts/stage-gate.sh <stage> [context-dir]
+# Usage: bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh <stage> [context-dir]
 #   stage:       discuss | design | coding | review-and-fix | summarize
 #   context-dir: path to .devpipe/state directory, default ".devpipe/state"
 #
@@ -71,15 +71,29 @@ check_prerequisite_stage() {
     case "$STAGE" in
         discuss)
             # discuss only for 新功能, check dev_type
-            if [[ "$dev_type" != "新功能" && "$dev_type" != "新功能" ]]; then
+            if [[ "$dev_type" != "新功能" && "$dev_type" != "new feature" ]]; then
                 die 2 "discuss 阶段仅适用于「新功能」类型。当前 dev_type 为「$(jq -r '.dev_type' "$CONTEXT_FILE")」，请直接使用 \`/devpipe:design\` 进行方案设计。"
             fi
             ;;
         design)
             # design follows discuss (for 新功能) or init (for Bugfix/重构)
+            if [[ "$dev_type" == "新功能" || "$dev_type" == "new feature" ]]; then
+                # 新功能：前置阶段必须是 discuss 或 design（重试）
+                if [[ "$current_stage" != "discuss" && "$current_stage" != "init" && "$current_stage" != "design" ]]; then
+                    die 2 "当前阶段为 \`$current_stage\`，新功能类型的 design 阶段要求前置阶段为 discuss 或 init。请先完成 discuss 阶段。"
+                fi
+            else
+                # Bugfix/重构：前置阶段必须是 init 或 design（重试）
+                if [[ "$current_stage" != "init" && "$current_stage" != "design" ]]; then
+                    die 2 "当前阶段为 \`$current_stage\`，design 阶段要求前置阶段为 init。请先完成 init 阶段。"
+                fi
+            fi
             ;;
         coding)
             # coding follows design
+            if [[ "$current_stage" != "design" && "$current_stage" != "coding" ]]; then
+                die 2 "当前阶段为 \`$current_stage\`，coding 阶段要求前置阶段为 design 或 coding。请先完成 design 阶段。"
+            fi
             ;;
         review-and-fix)
             if [[ "$current_stage" != "coding" && "$current_stage" != "review-and-fix" ]]; then

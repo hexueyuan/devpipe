@@ -1,6 +1,6 @@
 ---
 name: using-devpipe
-description: 每个对话开始时使用 - 建立如何查找和使用 devpipe skills 的规则，在任何响应（包括澄清问题）之前强制检查并调用合适的 skill。即使用户只是闲聊、提问、或请求看似简单的任务，也必须先检查是否有适用的 devpipe skill。
+description: 每个对话开始时使用 - 建立如何查找和使用 devpipe skills 的规则，在任何响应（包括澄清问题）之前强制检查并调用合适的 skill。当用户提到开发、编码、修 bug、重构、需求、评审、推送、总结、归档、继续开发、恢复进度等开发相关意图时，必须先检查 devpipe 工作流状态。即使用户只是闲聊、提问、或请求看似简单的任务，也必须先检查是否有适用的 devpipe skill。
 ---
 
 # 使用 Devpipe 工作流

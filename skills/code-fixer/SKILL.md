@@ -37,7 +37,7 @@ Fix Plan 是标准化的 JSON 格式，定义了需要修复的代码问题列�
 }
 ```
 
-完整字段说明和示例参见 [Fix Plan Schema](references/fix-plan-schema.md)。
+完整字段说明和示例参见 [Fix Plan Schema](../../references/fix-plan-schema.md)。
 
 ---
 

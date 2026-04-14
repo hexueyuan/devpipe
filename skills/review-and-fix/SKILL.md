@@ -1,6 +1,6 @@
 ---
 name: review-and-fix
-description: 对 coding 阶段产出的代码执行自检评审、修复问题、验证单测后推送到 GitHub 并创建 Pull Request。前提：coding 阶段已完成（已有 commit 但未 push）。严格工作流顺序：只能在 coding 完成后调用，完成后由用户手动触发 summarize。当用户说"review"、"评审"、"推送代码"、"push"、"自检"也应触发。
+description: 对 coding 阶段产出的代码执行自检评审、修复问题、验证单测后推送到 GitHub 并创建 Pull Request。前提：coding 阶段已完成（已有 commit 但未 push）。严格工作流顺序：只能在 coding 完成后调用，完成后由用户手动触发 summarize。当用户说"review"、"评审"、"推送代码"、"push"、"自检"、"代码检查"、"提交代码"、"创建 PR"也应触发。
 ---
 
 # 评审修复与推送（工作流阶段）
@@ -16,11 +16,11 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 
 - **本阶段（review-and-fix）的前置条件**：必须已完成 `devpipe:coding`（存在本地 commit 但未 push）
 - **本阶段（review-and-fix）的后继**：`devpipe:summarize`（用户手动触发）
-- **执行模式（按源代码变更量自动判断）**：
-  - **完整模式**（源代码变更 >= 50 行）：两阶段评审流程
+- **执行模式（按源代码变更量自动判断，阈值可通过 `.devpipe/devpipe.yml` 的 `review_threshold` 配置，默认 50 行）**：
+  - **完整模式**（源代码变更 >= 阈值）：两阶段评审流程
     - Phase 1：code-reviewer → 自动修复 must_fix → 验证 → 推送
     - Phase 2（可选）：用户确认后修复 should_fix → 验证 → 再次推送
-  - **轻量模式**（源代码变更 < 50 行）：跳过评审，仅验证后直接推送
+  - **轻量模式**（源代码变更 < 阈值）：跳过评审，仅验证后直接推送
 - **禁止的行为**：
   - 禁止在 coding 阶段未完成时直接调用本 skill
   - 禁止跳过本阶段直接执行 summarize
@@ -35,7 +35,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 **执行阶段准入检查：**
 
 ```bash
-bash scripts/stage-gate.sh review-and-fix
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh review-and-fix
 ```
 
 **额外校验：**
@@ -59,16 +59,20 @@ git diff --numstat HEAD~1 HEAD -- ':(exclude)*.md' ':(exclude)*Test.java' ':(exc
 
 > 统计新增行数 + 删除行数，排除 Markdown 文档、Java 单测文件（*Test.java、*Tests.java、*IT.java）、Go 测试文件（*_test.go）、Python 测试文件（test_*.py）。
 
+**读取轻量模式阈值：**
+
+检查 `.devpipe/devpipe.yml` 中是否配置了 `review_threshold`（整数，单位为行数）。如果配置了则使用该值，否则使用默认值 **50**。
+
 **根据变更量选择执行路径：**
 
-- **变更量 < 50 行** → 进入**轻量模式（步骤 2L）**
-  > "检测到源代码变更 N 行（不含文档和测试），使用轻量模式：跳过自检评审，仅验证后推送。"
-- **变更量 >= 50 行** → 进入**完整模式（步骤 2）**
-  > "检测到源代码变更 N 行（不含文档和测试），使用完整模式：执行自检评审后推送。"
+- **变更量 < 阈值** → 进入**轻量模式（步骤 2L）**
+  > "检测到源代码变更 N 行（不含文档和测试），阈值为 T 行，使用轻量模式：跳过自检评审，仅验证后推送。"
+- **变更量 >= 阈值** → 进入**完整模式（步骤 2）**
+  > "检测到源代码变更 N 行（不含文档和测试），阈值为 T 行，使用完整模式：执行自检评审后推送。"
 
 ---
 
-## 步骤 2L：轻量模式（源代码变更 < 50 行）
+## 步骤 2L：轻量模式（源代码变更 < 阈值）
 
 跳过代码评审，仅执行基本验证后直接推送。
 
@@ -325,7 +329,7 @@ Phase 2 已由用户在步骤 7 确认意图，**不再需要 dry-run 和推送�
 
 ```
 ========== 代码已推送（轻量模式） ==========
-评审：已跳过（源代码变更 < 50 行）
+评审：已跳过（源代码变更低于阈值）
 代码推送：已推送到 <local_branch>（PR 目标: <remote_branch>）
 Pull Request：已创建
 
@@ -368,7 +372,7 @@ Pull Request：已创建
 标记阶段完成：
 
 ```bash
-bash scripts/stage-complete.sh review-and-fix
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh review-and-fix
 ```
 
 展示完成通知：
@@ -443,8 +447,8 @@ Agent 完成后，执行验证 → commit → push（同轻量修改流程）。
 
 | 状态 | 恢复行为 |
 |------|----------|
-| stage 为 `review-and-fix` + 未 push + 变更量 >= 50 行 | 从步骤 2（代码评审）重新开始 |
-| stage 为 `review-and-fix` + 未 push + 变更量 < 50 行 | 从步骤 2L（轻量模式）继续 |
+| stage 为 `review-and-fix` + 未 push + 变更量 >= 阈值 | 从步骤 2（代码评审）重新开始 |
+| stage 为 `review-and-fix` + 未 push + 变更量 < 阈值 | 从步骤 2L（轻量模式）继续 |
 | stage 为 `review-and-fix` + 已 push + `.devpipe/state/phase2-fixplan.json` 存在 | 从步骤 7（Phase 2 询问）继续 |
 | stage 为 `review-and-fix` + 已 push + 无 `phase2-fixplan.json` | 跳到步骤 9（PR Review 等待） |
 | stage 为 `review-and-fix` + 已 push + 无 `phase2-fixplan.json` + 用户表示完成 | 步骤 10（标记阶段完成） |

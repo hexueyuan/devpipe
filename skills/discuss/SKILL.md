@@ -1,6 +1,6 @@
 ---
 name: discuss
-description: 探索新功能需求并形成需求文档。仅适用于「新功能」类型开发。当用户说"讨论一下需求"、"聊聊需求"、"我想做一个新功能..."时触发。Bugfix 和优化重构不走此阶段，直接进入 design。前提：需要先执行 devpipe:init 创建开发环境。
+description: 探索新功能需求并形成需求文档（PRD）。仅适用于「新功能」类型开发。当用户说"讨论一下需求"、"聊聊需求"、"我想做一个新功能..."、"帮我分析需求"、"梳理需求"、"需求讨论"、"产品需求"时触发。Bugfix 和优化重构不走此阶段，直接进入 design。前提：需要先执行 devpipe:init 创建开发环境。
 ---
 
 # 需求讨论（仅新功能）
@@ -42,7 +42,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 **执行阶段准入检查：**
 
 ```bash
-bash plugins/devpipe/scripts/stage-gate.sh discuss
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh discuss
 ```
 
 脚本自动完成 context.json 校验（dev_type、description、remote_branch、local_branch 非空）和阶段标记。**脚本会检查 dev_type 是否为「新功能」，非新功能类型会被拒绝。**
@@ -120,7 +120,17 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 
 > **注意**：PRD 不包含实现方案、涉及模块、架构设计、测试场景等技术内容，这些在 design 阶段补充。
 
-### 步骤 5：用户确认需求文档（硬性门禁）
+### 步骤 5：需求文档审查
+
+`.devpipe/state/prd.md` 写入后，派遣 spec-reviewer 子 agent 审查：
+
+1. 使用 Agent 工具（subagent_type: "general-purpose"），按 [spec-reviewer-prompt.md](spec-reviewer-prompt.md) 中的模板构造 prompt，传入 `.devpipe/state/prd.md` 的文件路径
+2. 如果审查发现问题：使用 Edit 工具修改 `.devpipe/state/prd.md`，然后重新派遣审查
+3. 如果审查通过：进入用户确认
+
+**审查次数限制**：最多 2 轮审查。超过限制则将问题提交给用户决定。
+
+### 步骤 6：用户确认需求文档（硬性门禁）
 
 <HARD-GATE>
 需求文档写入后，**必须明确询问用户是否对需求文档没有问题**，**必须等到用户明确表示确认后才能进入下一阶段**。
@@ -133,18 +143,18 @@ bash plugins/devpipe/scripts/stage-gate.sh discuss
 
 必须的行为：
 - 等待用户回复
-- 只有用户明确给出肯定回复后，才进入步骤 6
+- 只有用户明确给出肯定回复后，才进入步骤 7
 - 如果用户提出修改意见，使用 Edit 工具修改 `.devpipe/state/prd.md`，然后再次请求确认
 </HARD-GATE>
 
-### 步骤 6：调用 design 阶段
+### 步骤 7：调用 design 阶段
 
 用户确认后：
 
 1. 标记阶段完成：
 
 ```bash
-bash plugins/devpipe/scripts/stage-complete.sh discuss
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh discuss
 ```
 
 2. 宣告并调用 devpipe:design：

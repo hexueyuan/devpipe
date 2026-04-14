@@ -27,6 +27,7 @@ class DevpipeConfig:
     ports: list[PortMapping] = field(default_factory=list)
     mounts: list[MountMapping] = field(default_factory=list)
     docs_dir: Optional[str] = None  # 文档存放目录，相对于仓库根目录，默认 .devpipe/docs
+    review_threshold: int = 50  # 源代码变更行数阈值，低于此值走轻量模式，默认 50
 
     @classmethod
     def load(cls, repo_root: str) -> "DevpipeConfig":
@@ -59,6 +60,7 @@ class DevpipeConfig:
         ports: list[PortMapping] = []
         mounts: list[MountMapping] = []
         docs_dir: Optional[str] = None
+        review_threshold: int = 50
         current_key: Optional[str] = None
 
         for lineno, line in enumerate(raw.splitlines(), start=1):
@@ -95,6 +97,11 @@ class DevpipeConfig:
                     # scalar value
                     if key == "docs_dir":
                         docs_dir = rest
+                    elif key == "review_threshold":
+                        try:
+                            review_threshold = int(rest)
+                        except ValueError:
+                            raise ConfigError(f"第 {lineno} 行：review_threshold 必须为整数，实际为 '{rest}'")
                     current_key = None
                 else:
                     current_key = key
@@ -102,7 +109,7 @@ class DevpipeConfig:
 
             raise ConfigError(f"第 {lineno} 行：无法解析 '{stripped}'")
 
-        return cls(ports=ports, mounts=mounts, docs_dir=docs_dir)
+        return cls(ports=ports, mounts=mounts, docs_dir=docs_dir, review_threshold=review_threshold)
 
     def docker_port_args(self) -> list[str]:
         """返回 docker run 的 -p 参数列表"""

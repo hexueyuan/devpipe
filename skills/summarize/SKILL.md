@@ -1,6 +1,6 @@
 ---
 name: summarize
-description: 开发完成后的总结归档。收集开发过程资料，生成完整的迭代文档（基本信息、原始需求、需求分析过程、实现方案、问题与解决方案、反思与复盘共 6 节，Markdown 格式，保存到 .devpipe/state/summary.md），清理状态文件。用户手动触发。当用户说"总结"、"归档"、"summarize"、"代码已合入"时触发。前提：review-and-fix 阶段已完成（代码已推送并合入）。这是工作流的终止阶段。
+description: 开发完成后的总结归档。收集开发过程资料，生成完整的迭代文档（基本信息、原始需求、需求分析过程、实现方案、问题与解决方案、反思与复盘共 6 节，Markdown 格式，保存到 .devpipe/state/summary.md），清理状态文件。用户手动触发。当用户说"总结"、"归档"、"summarize"、"代码已合入"、"开发完成了"、"收尾"、"PR已合入"时触发。前提：review-and-fix 阶段已完成（代码已推送并合入）。这是工作流的终止阶段。
 ---
 
 # 开发总结与归档（工作流终止阶段）
@@ -13,8 +13,8 @@ description: 开发完成后的总结归档。收集开发过程资料，生成�
 ## 工作流顺序约束
 
 devpipe 工作流的阶段顺序取决于 `dev_type`：
-- **新功能 / 优化重构**：`init → discuss → design → coding → review-and-fix → summarize`
-- **Bugfix**：`init → discuss → coding → review-and-fix → summarize`（跳过 design）
+- **新功能**：`init → discuss → design → coding → review-and-fix → summarize`
+- **Bugfix / 优化重构**：`init → design → coding → review-and-fix → summarize`（跳过 discuss）
 
 - **本阶段（summarize）的前置条件**：必须已完成 `devpipe:review-and-fix`（代码已推送到 GitHub）
 - **本阶段是工作流的终止阶段**，完成后 stage 更新为 `"done"`

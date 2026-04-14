@@ -126,7 +126,7 @@ Agent 工具参数：
 
 ### 步骤 5：转换为 Fix Plan JSON
 
-按 [评审输出 Schema](references/review-output-schema.md) 中的映射规则，将评审结果转换为标准 Fix Plan JSON。
+按 [评审输出 Schema](../../references/review-output-schema.md) 中的映射规则，将评审结果转换为标准 Fix Plan JSON。
 
 **转换流程**：
 
@@ -219,9 +219,9 @@ Skill 工具参数：
 | Agent 工具 (general-purpose) | 执行评审的独立上下文 | 步骤 3 派遣评审子 Agent |
 | Skill (devpipe:code-fixer) | 执行修复（可选链式调用） | 步骤 6 用户确认后 |
 | [reviewer-agent-prompt.md](reviewer-agent-prompt.md) | 子 Agent Prompt 模板 | 步骤 3 构造 prompt |
-| [评审输出 Schema](references/review-output-schema.md) | 输出格式和映射规则参考 | 步骤 5 格式转换 |
+| [评审输出 Schema](../../references/review-output-schema.md) | 输出格式和映射规则参考 | 步骤 5 格式转换 |
 
 ## 参考文档
 
-- [评审输出 Schema](references/review-output-schema.md) — 评审子 Agent 输出格式和 Fix Plan 映射规则
+- [评审输出 Schema](../../references/review-output-schema.md) — 评审子 Agent 输出格式和 Fix Plan 映射规则
 - [Fix Plan Schema](../../references/fix-plan-schema.md) — Fix Plan JSON 完整格式参考（code-fixer skill 维护）

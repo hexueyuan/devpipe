@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # stage-complete.sh — devpipe stage completion marker
 #
-# Usage: bash plugins/devpipe/scripts/stage-complete.sh <stage> [--next-stage <name>] [context-dir]
+# Usage: bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh <stage> [--next-stage <name>] [context-dir]
 #   stage:        current stage being completed
 #   --next-stage: optional, preset the next stage (stage=<next>, stage_completed=false)
 #   context-dir:  path to .devpipe/state directory, default ".devpipe/state"

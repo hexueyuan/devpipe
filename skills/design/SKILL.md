@@ -1,6 +1,6 @@
 ---
 name: design
-description: 制定技术方案和实施计划。支持两种入口：新功能从 discuss 进入（读取 prd.md），Bugfix/优化重构从 init 直接进入（以卡片详情为输入）。当用户说"制定计划"、"拆分任务"、"写个计划"、"怎么实现"、"设计方案"也应触发。严格工作流顺序：devpipe:design 完成后只能调用 devpipe:coding。
+description: 制定技术方案和实施计划。支持两种入口：新功能从 discuss 进入（读取 prd.md），Bugfix/优化重构从 init 直接进入（以卡片详情为输入）。当用户说"制定计划"、"拆分任务"、"写个计划"、"怎么实现"、"设计方案"、"实施方案"、"分析一下怎么修"、"重构方案"、"技术方案"也应触发。严格工作流顺序：devpipe:design 完成后只能调用 devpipe:coding。
 ---
 
 # 方案设计
@@ -33,7 +33,7 @@ devpipe 工作流根据 `dev_type` 走不同路径：
 **执行阶段准入检查：**
 
 ```bash
-bash plugins/devpipe/scripts/stage-gate.sh design
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh design
 ```
 
 脚本自动完成 context.json 校验和阶段标记。**脚本会根据 dev_type 检查依赖文件**：
@@ -299,7 +299,7 @@ bash plugins/devpipe/scripts/stage-gate.sh design
 1. 标记阶段完成：
 
 ```bash
-bash plugins/devpipe/scripts/stage-complete.sh design
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-complete.sh design
 ```
 
 2. 宣告并调用 devpipe:coding：
