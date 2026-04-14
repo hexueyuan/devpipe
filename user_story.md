@@ -225,10 +225,7 @@ Ducc: [校验 .devpipe/state/context.json ✓ .devpipe/state/prd.md ✓ .devpipe
 
       ── 整合阶段 ──
 
-      调用 /simplify 执行全量代码优化...
-      simplify 完成，优化了 2 处代码。
-
-      执行全量单测（验证 simplify 改动）:
+      执行全量单测（验证各模块间无冲突）:
         npm test
       全量测试通过！
 
@@ -523,7 +520,7 @@ Ducc: [校验 context.json ✓ prd.md ✓，dev_type=Bugfix → 直接修复模�
       [自动调用 devpipe:review-and-fix]
 ```
 
-**注意**：不使用子 Agent，不生成 coding-plan.md / task-progress.md，不调用 /simplify，直接在主对话完成修复。
+**注意**：不使用子 Agent，不生成 coding-plan.md / task-progress.md，直接在主对话完成修复。
 
 **产出**：代码 commit（不 push）
 

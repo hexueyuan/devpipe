@@ -88,6 +88,12 @@
    - 死代码 / 不可达分支
    - 资源泄漏（未关闭的流、连接等）
    - 过于复杂的方法（参数过多、方法过长）
+5. **代码优化检查**（额外关注以下可优化点）：
+   - 重复代码：多处相似逻辑可提取公共方法或工具类
+   - 低效实现：可用更高效的数据结构、算法或标准库 API 替代
+   - 过度设计：不必要的抽象层、过深的继承层次、未使用的扩展点
+   - 可简化的表达式：冗余的条件判断、可合并的分支、可用语言特性简化的写法
+   - 缺少的代码复用：已有现成的工具方法/基类方法但未使用，重复造轮子
 
 将每条发现记录为一个 issue，`source` 标记为 `"manual"`。
 
@@ -102,7 +108,7 @@
   "file_path": "文件相对路径（相对于工作目录）",
   "line": 42,
   "end_line": 45,
-  "category": "import | naming | format | logic | style | doc | other",
+  "category": "import | naming | format | logic | style | doc | optimization | other",
   "severity": "must_fix | should_fix | nice_to_have",
   "source": "lint | manual",
   "standard_reference": "可选：违反的具体规范条目编号和名称",
@@ -115,8 +121,8 @@
 ### severity 校准
 
 - **`must_fix`**：Bug、NPE 风险、资源泄漏、安全漏洞、违反规范中标记为"强制"/"必须"的规则
-- **`should_fix`**：编码风格违规、命名不规范、未使用 import、FQN 使用、公共 API 缺少文档
-- **`nice_to_have`**：微小可读性改善、可选性能优化、代码结构建议
+- **`should_fix`**：编码风格违规、命名不规范、未使用 import、FQN 使用、公共 API 缺少文档、重复代码可提取公共方法、低效实现有明显更优替代方案
+- **`nice_to_have`**：微小可读性改善、可选性能优化、代码结构建议、过度设计的简化建议、表达式简化
 
 ### category 说明
 
@@ -126,6 +132,7 @@
 - **`logic`**：条件判断、异常处理、null 安全、资源管理等逻辑问题
 - **`style`**：FQN 替换、魔法数提取、过长方法等编码风格问题
 - **`doc`**：Javadoc、注释缺失或不一致
+- **`optimization`**：代码复用、效率优化、过度设计、可简化的表达式
 - **`other`**：不属于以上分类的其他问题
 
 <HARD-GATE>

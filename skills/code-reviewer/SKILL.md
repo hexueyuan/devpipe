@@ -131,7 +131,7 @@ Agent 工具参数：
 **转换流程**：
 
 1. 为每条 issue 生成 `id`（`fix-001` 递增）
-2. 将 `category` 映射为 `type`（import→import, naming→naming/rename, format→format, logic→logic, style→style, doc→doc, other→replace）
+2. 将 `category` 映射为 `type`（import→import, naming→naming/rename, format→format, logic→logic, style→style, doc→doc, optimization→optimization, other→replace）
 3. 将 `severity` 映射为 Fix Plan 的 `severity`（must_fix→critical, should_fix→warning, nice_to_have→suggestion）
 4. 对 `naming` 类型：如果 `referenced_files` 非空，使用 `rename` 类型并填充 `related_files`
 5. 将 `standard_reference` 映射到 `context` 字段

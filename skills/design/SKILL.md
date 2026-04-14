@@ -211,10 +211,9 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/stage-gate.sh design
 ## 提交方式
 
 所有子任务完成后，由主对话在 coding 阶段统一处理：
-1. 调用 /simplify skill 执行全量代码优化
-2. 如有改动，再次执行全量单测 + 覆盖率检查
-3. git add → git commit -m "#<Issue编号> English description."（不 push）
-4. 自动进入 review-and-fix 阶段
+1. 执行全量单测 + 覆盖率检查
+2. git add → git commit -m "#<Issue编号> English description."（不 push）
+3. 自动进入 review-and-fix 阶段（代码优化在评审阶段一并完成）
 
 要点：每个 git 命令独立执行（不用 `&&`），只 add 具体的源代码和测试文件，不要添加 devpipe 状态文件（.devpipe/state/coding-plan.md、.devpipe/state/prd.md、.devpipe/state/context.json）。
 - 首次提交: git add → git commit -m "#<Issue编号> English description."

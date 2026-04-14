@@ -93,23 +93,13 @@ Agent 返回后检查：
 
 所有子任务完成后执行整合。
 
-### 3.1 全量代码优化
+### 3.1 全量单测 + 增量覆盖率
 
-调用内置的 `/simplify` skill 执行全量代码优化：
-
-```
-Skill 工具参数：
-- skill: "simplify"
-```
-
-### 3.2 全量单测 + 增量覆盖率
-
-如果 simplify 产生了代码改动，执行全量验证（根据项目构建系统自动检测测试命令）。
+执行全量验证（根据项目构建系统自动检测测试命令），确认各模块间没有冲突。
 
 - 如果测试失败或覆盖率不达标，修复问题后重新验证
-- 如果 simplify 未产生改动，仍然执行一次验证确认各模块间没有冲突
 
-### 3.3 Git commit（不 push）
+### 3.2 Git commit（不 push）
 
 按 [Git 命令参考](../../references/git_commands.md) 中的规则执行提交。GitHub Issue 编号和远程分支从 `.devpipe/state/coding-plan.md` 获取。
 
@@ -123,7 +113,7 @@ git commit -m "#<Issue编号> Short English description."
 
 **注意：不执行 git push。** 推送在 review-and-fix 阶段完成。
 
-### 3.4 更新 stage 并调用 review-and-fix
+### 3.3 更新 stage 并调用 review-and-fix
 
 1. 标记阶段完成并预设下一阶段：
 
@@ -173,7 +163,6 @@ Skill 工具参数：
 | Agent 执行成功 | 检查返回摘要，确认无异常后更新进度 |
 | Agent 部分完成（如测试未通过） | 在主对话中补充处理，或重新启动 Agent |
 | Agent 超时或异常退出 | 检查 git status 查看已完成的文件改动，在主对话中继续剩余步骤 |
-| simplify 引入测试失败 | 修复问题后重新验证 |
 | 全量测试失败 | 定位失败模块，修复后重新提交 |
 | 用户中途取消 | 进度已保存在 `.devpipe/state/task-progress.md`，下次可恢复 |
 | 上下文被清空 | 读取 `.devpipe/state/coding-plan.md` 和 `.devpipe/state/task-progress.md`，按其中的 Agent 执行方式继续 |
@@ -185,8 +174,7 @@ Skill 工具参数：
 |------|------|----------|
 | Agent 工具 (general-purpose) | 执行子任务的独立上下文 | 步骤 2 主编排 |
 | `coding-agent-prompt.md` | 子任务 Agent Prompt 模板 | 步骤 2 构造 prompt |
-| Skill (simplify) | 全量代码优化 | 整合步骤 1 |
-| Skill (devpipe:review-and-fix) | 代码评审和推送（自动调用） | 整合步骤 4 |
+| Skill (devpipe:review-and-fix) | 代码评审和推送（自动调用） | 整合步骤 3 |
 
 ## 参考文档
 
