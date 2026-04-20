@@ -18,7 +18,38 @@ WORKSPACE="$(dirname "$SCRIPT_DIR")"
 DASHBOARD_DIR="$WORKSPACE/src"
 PID_FILE="/tmp/devpipe-dashboard.pid"
 LOG_FILE="/tmp/devpipe-dashboard.log"
-PORT=5051
+
+# 从插件根目录向上查找宿主仓库根目录（含 .git 的目录）
+find_repo_root() {
+    local dir
+    dir="$(dirname "$(dirname "$WORKSPACE")")"  # 插件根目录的父级
+    while [ "$dir" != "/" ]; do
+        if [ -d "$dir/.git" ]; then
+            echo "$dir"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$PWD"
+}
+
+# 从 devpipe.yml 读取 dashboard_port，默认 5051
+get_dashboard_port() {
+    local repo_root yml_path
+    repo_root="$(find_repo_root)"
+    yml_path="$repo_root/.devpipe/devpipe.yml"
+    if [ -f "$yml_path" ]; then
+        local val
+        val=$(grep '^dashboard_port:' "$yml_path" 2>/dev/null | head -1 | sed 's/^dashboard_port:[[:space:]]*//' | sed 's/[[:space:]]*#.*//')
+        if [ -n "$val" ]; then
+            echo "$val"
+            return
+        fi
+    fi
+    echo "5051"
+}
+
+PORT=$(get_dashboard_port)
 
 # ========================
 # 辅助函数
@@ -81,7 +112,7 @@ cmd_start() {
 
     # 使用 nohup 后台启动
     cd "$DASHBOARD_DIR"
-    DASHBOARD_PORT=$PORT nohup python3 app.py >> "$LOG_FILE" 2>&1 &
+    nohup python3 app.py >> "$LOG_FILE" 2>&1 &
     local pid=$!
     echo $pid > "$PID_FILE"
 

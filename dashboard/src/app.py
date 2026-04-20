@@ -9,7 +9,7 @@ try:
         get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context,
         STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
     )
-    from .config import REPO_ROOT, get_github_issue_url
+    from .config import REPO_ROOT, get_github_issue_url, get_dashboard_port
     from .devspace_service import (
         query_github_issue,
         validate_branch,
@@ -27,7 +27,7 @@ except ImportError:
         get_all_worktrees, get_dev_stage, get_stage_documents, parse_dev_context,
         STAGES, STAGE_LABELS, STAGE_DOCUMENT_MAP
     )
-    from config import REPO_ROOT, get_github_issue_url
+    from config import REPO_ROOT, get_github_issue_url, get_dashboard_port
     from devspace_service import (
         query_github_issue,
         validate_branch,
@@ -481,4 +481,4 @@ if __name__ == "__main__":
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
-    app.run(host="0.0.0.0", port=int(os.environ.get("DASHBOARD_PORT", 5001)))
+    app.run(host="0.0.0.0", port=get_dashboard_port())

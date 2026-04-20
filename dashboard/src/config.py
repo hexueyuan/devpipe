@@ -19,6 +19,28 @@ def get_repo_root():
 REPO_ROOT = get_repo_root()
 WORKTREE_DIR = os.path.join(REPO_ROOT, ".devpipe", "worktrees")
 
+DEFAULT_DASHBOARD_PORT = 5051
+
+
+def get_dashboard_port() -> int:
+    """从 {REPO_ROOT}/.devpipe/devpipe.yml 解析 dashboard_port，默认 5051"""
+    yml_path = os.path.join(REPO_ROOT, ".devpipe", "devpipe.yml")
+    if not os.path.isfile(yml_path):
+        return DEFAULT_DASHBOARD_PORT
+    try:
+        with open(yml_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("dashboard_port:"):
+                    value = line[len("dashboard_port:"):].strip()
+                    if "#" in value:
+                        value = value[:value.index("#")].strip()
+                    if value:
+                        return int(value)
+    except (IOError, ValueError):
+        pass
+    return DEFAULT_DASHBOARD_PORT
+
 # 分支前缀
 BRANCH_PREFIXES = {
     "新功能": "feature-",

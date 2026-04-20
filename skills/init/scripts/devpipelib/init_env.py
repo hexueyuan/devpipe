@@ -157,10 +157,6 @@ class InitEnvRunner:
         self._check_conflicts()
         _stage("冲突检测", "done")
 
-        _stage("工作区检测", "running")
-        self._check_clean_worktree()
-        _stage("工作区检测", "done")
-
         _stage("分支同步", "running")
         self._sync_base_branch()
         _stage("分支同步", "done")
@@ -284,37 +280,6 @@ class InitEnvRunner:
         if errors:
             raise ConflictError(
                 "\n".join(errors) + f"\n\n如需重建，先执行清理:\n  {cleanup_cmd}"
-            )
-
-    def _check_clean_worktree(self):
-        """脏工作区检测"""
-        # 空仓库时跳过
-        result = run_cmd(["git", "-C", self.repo_root, "rev-parse", "HEAD"], check=False)
-        if result.returncode != 0:
-            return
-
-        result = run_cmd(
-            ["git", "-C", self.repo_root, "diff", "--quiet", "HEAD"],
-            check=False,
-        )
-        if result.returncode != 0:
-            raise ConflictError(
-                "工作区有未提交的改动\n"
-                "请先提交或暂存改动后再初始化开发环境:\n"
-                "  git stash     # 暂存改动\n"
-                "  git commit    # 提交改动"
-            )
-
-        result = run_cmd(
-            ["git", "-C", self.repo_root, "diff", "--cached", "--quiet", "HEAD"],
-            check=False,
-        )
-        if result.returncode != 0:
-            raise ConflictError(
-                "工作区有未提交的改动\n"
-                "请先提交或暂存改动后再初始化开发环境:\n"
-                "  git stash     # 暂存改动\n"
-                "  git commit    # 提交改动"
             )
 
     def _sync_base_branch(self):

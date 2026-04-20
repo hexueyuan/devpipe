@@ -28,6 +28,7 @@ class DevpipeConfig:
     mounts: list[MountMapping] = field(default_factory=list)
     docs_dir: Optional[str] = None  # 文档存放目录，相对于仓库根目录，默认 .devpipe/docs
     review_threshold: int = 50  # 源代码变更行数阈值，低于此值走轻量模式，默认 50
+    dashboard_port: int = 5051  # Dashboard 启动端口，默认 5051
 
     @classmethod
     def load(cls, repo_root: str) -> "DevpipeConfig":
@@ -61,6 +62,7 @@ class DevpipeConfig:
         mounts: list[MountMapping] = []
         docs_dir: Optional[str] = None
         review_threshold: int = 50
+        dashboard_port: int = 5051
         current_key: Optional[str] = None
 
         for lineno, line in enumerate(raw.splitlines(), start=1):
@@ -102,6 +104,11 @@ class DevpipeConfig:
                             review_threshold = int(rest)
                         except ValueError:
                             raise ConfigError(f"第 {lineno} 行：review_threshold 必须为整数，实际为 '{rest}'")
+                    elif key == "dashboard_port":
+                        try:
+                            dashboard_port = int(rest)
+                        except ValueError:
+                            raise ConfigError(f"第 {lineno} 行：dashboard_port 必须为整数，实际为 '{rest}'")
                     current_key = None
                 else:
                     current_key = key
@@ -109,7 +116,7 @@ class DevpipeConfig:
 
             raise ConfigError(f"第 {lineno} 行：无法解析 '{stripped}'")
 
-        return cls(ports=ports, mounts=mounts, docs_dir=docs_dir, review_threshold=review_threshold)
+        return cls(ports=ports, mounts=mounts, docs_dir=docs_dir, review_threshold=review_threshold, dashboard_port=dashboard_port)
 
     def docker_port_args(self) -> list[str]:
         """返回 docker run 的 -p 参数列表"""
